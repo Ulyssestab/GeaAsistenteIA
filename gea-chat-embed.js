@@ -40,6 +40,7 @@
       justify-content:center;
       z-index:${zIndex};
       overflow:hidden;
+      animation: gea-chat-bob 2.4s ease-in-out infinite;
     }
     .gea-chat-btn img{
       width:100%;
@@ -50,6 +51,35 @@
       font-size:calc(var(--gea-chat-btn-size) * 0.45);
       color:#fff;
       font-family:Arial, sans-serif;
+    }
+    .gea-chat-greeting{
+      position:fixed;
+      bottom: calc(22px + (var(--gea-chat-btn-size) / 2) - 18px);
+      ${position === "left" ? "left:calc(22px + var(--gea-chat-btn-size) + 10px);" : "right:calc(22px + var(--gea-chat-btn-size) + 10px);"}
+      background:#ffffff;
+      color:#1a1a1a;
+      padding:10px 14px;
+      border-radius:999px;
+      box-shadow:0 12px 30px rgba(0,0,0,.18);
+      font-family:Arial, sans-serif;
+      font-size:14px;
+      z-index:${zIndex};
+      opacity:0;
+      transform:translateY(6px);
+      animation: gea-chat-greeting 6s ease-out 0.4s forwards;
+      pointer-events:none;
+      white-space:nowrap;
+    }
+    .gea-chat-greeting::after{
+      content:"";
+      position:absolute;
+      top:50%;
+      ${position === "left" ? "left:-6px;" : "right:-6px;"}
+      width:10px;
+      height:10px;
+      background:#ffffff;
+      transform:translateY(-50%) rotate(45deg);
+      box-shadow:0 12px 30px rgba(0,0,0,.12);
     }
 
     .gea-chat-frame{
@@ -79,6 +109,21 @@
         ${position === "left" ? "left:15px;" : "right:15px;"}
         --gea-chat-btn-size: clamp(60px, 18vw, 80px);
       }
+      .gea-chat-greeting{
+        ${position === "left" ? "left:calc(15px + var(--gea-chat-btn-size) + 10px);" : "right:calc(15px + var(--gea-chat-btn-size) + 10px);"}
+        bottom: calc(22px + (var(--gea-chat-btn-size) / 2) - 18px);
+        font-size:13px;
+      }
+    }
+    @keyframes gea-chat-bob{
+      0%, 100%{ transform:translateY(0); box-shadow:0 10px 25px rgba(0,0,0,.25); }
+      50%{ transform:translateY(-6px); box-shadow:0 16px 30px rgba(0,0,0,.2); }
+    }
+    @keyframes gea-chat-greeting{
+      0%{ opacity:0; transform:translateY(6px); }
+      15%{ opacity:1; transform:translateY(0); }
+      70%{ opacity:1; transform:translateY(0); }
+      100%{ opacity:0; transform:translateY(6px); }
     }
   `;
   document.head.appendChild(style);
@@ -127,6 +172,18 @@
 
   document.body.appendChild(btn);
   document.body.appendChild(frame);
+
+  const greeting = document.createElement("div");
+  greeting.className = "gea-chat-greeting";
+  greeting.textContent = "¡Hola! ¿Necesitas ayuda?";
+  document.body.appendChild(greeting);
+
+  const dismissGreeting = () => {
+    greeting.style.opacity = "0";
+    greeting.style.transform = "translateY(6px)";
+  };
+
+  btn.addEventListener("click", dismissGreeting);
 
   // Cerrar con ESC (opcional)
   window.addEventListener("keydown", (e) => {
