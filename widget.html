@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Asistente</title>
+  <style>
+    *{ box-sizing:border-box; font-family: Arial, sans-serif; }
+    body{ margin:0; background:#f3f6fb; }
+    .wrap{
+      height:100vh;
+      display:flex;
+      flex-direction:column;
+    }
+    .top{
+      background:#0b5cff;
+      color:#fff;
+      padding:12px 14px;
+      font-weight:700;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .top small{ font-weight:400; opacity:.9; }
+    .chat{
+      flex:1;
+      overflow:auto;
+      padding:14px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .msg{
+      max-width:85%;
+      padding:10px 12px;
+      border-radius:14px;
+      font-size:14px;
+      line-height:1.35;
+      box-shadow:0 2px 10px rgba(0,0,0,.08);
+      white-space:pre-wrap;
+    }
+    .me{ align-self:flex-end; background:#0b5cff; color:#fff; border-bottom-right-radius:6px; }
+    .bot{ align-self:flex-start; background:#fff; color:#111; border-bottom-left-radius:6px; }
+    .bar{
+      display:flex;
+      gap:8px;
+      padding:10px;
+      background:#fff;
+      border-top:1px solid #e7e7e7;
+    }
+    input{
+      flex:1;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid #ddd;
+      outline:none;
+    }
+    button{
+      border:none;
+      padding:10px 12px;
+      border-radius:12px;
+      background:#0b5cff;
+      color:#fff;
+      font-weight:700;
+      cursor:pointer;
+    }
+    .hint{
+      font-size:12px;
+      color:#556;
+      padding:0 14px 10px;
+      opacity:.85;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div id="title">Asistente</div>
+      <small>IA</small>
+    </div>
+
+    <div class="chat" id="chat"></div>
+    <div class="hint" id="hint">Escribe tu pregunta…</div>
+
+    <div class="bar">
+      <input id="txt" placeholder="Ej: ¿Qué trámites puedo realizar?" />
+      <button id="btn">Enviar</button>
+    </div>
+  </div>
+
+<script>
+  // Lee parámetros del embed
+  const params = new URLSearchParams(location.search);
+  const site = params.get("site") || "";
+  const page = params.get("page") || "";
+  const title = decodeURIComponent(params.get("title") || "Asistente");
+
+  document.getElementById("title").textContent = title;
+
+  // AJUSTA ESTA RUTA A TU API
+  // Ideal: mismo dominio (eservicios2) para evitar broncas CORS
+  const API_CHAT = "/api/chat";  // <-- tu endpoint IA
+  const API_TTS  = "/api/tts";   // <-- tu endpoint voz (opcional)
+
+  const chat = document.getElementById("chat");
+  const txt  = document.getElementById("txt");
+  const btn  = document.getElementById("btn");
+
+  function addMsg(text, who){
+    const div = document.createElement("div");
+    div.className = "msg " + (who === "me" ? "me" : "bot");
+    div.textContent = text;
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  async function speakIfAvailable(text){
+    // Opcional: si tienes TTS, reproduce audio.
+    // Si no quieres voz aún, elimina esta función.
+    try{
+      const res = await fetch(API_TTS, {
+        method: "POST",
+        headers: { "Content-Type": "application/json; charset=utf-8" },
+        body: JSON.stringify({ text })
+      });
+      if(!res.ok) return;
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      audio.onended = () => URL.revokeObjectURL(url);
+      await audio.play();
+    }catch(e){}
+  }
+
+  async function ask(){
+    const q = (txt.value || "").trim();
+    if(!q) return;
+
+    txt.value = "";
+    addMsg(q, "me");
+
+    addMsg("Pensando...", "bot");
+
+    try{
+      const res = await fetch(API_CHAT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json; charset=utf-8" },
+        body: JSON.stringify({
+          message: q,
+          site,
+          page
+        })
+      });
+
+      if(!res.ok){
+        chat.lastChild.textContent = "No pude conectar con el asistente. Intenta más tarde.";
+        return;
+      }
+
+      const data = await res.json();
+      const answer = data?.answer || "No encontré respuesta.";
+
+      chat.lastChild.textContent = answer;
+
+      // Si quieres voz:
+      // await speakIfAvailable(answer);
+
+    }catch(err){
+      chat.lastChild.textContent = "Error de conexión. Verifica tu servicio.";
+    }
+  }
+
+  btn.addEventListener("click", ask);
+  txt.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") ask();
+  });
+
+  // Recibe evento "open" desde el embed para enfocar el input
+  window.addEventListener("message", (e) => {
+    // Importante: valida origen si lo necesitas
+    if(e.data?.type === "GEA_CHAT_OPEN"){
+      setTimeout(() => txt.focus(), 50);
+    }
+  });
+
+  // Mensaje inicial
+  addMsg("Hola 👋 Soy tu asistente virtual. ¿En qué te ayudo?", "bot");
+</script>
+</body>
+</html>
