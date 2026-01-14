@@ -27,7 +27,9 @@
       position:fixed;
       bottom:22px;
       ${position === "left" ? "left:22px;" : "right:22px;"}
-      width:60px;height:60px;
+      --gea-chat-btn-size: clamp(64px, 7vw, 88px);
+      width:var(--gea-chat-btn-size);
+      height:var(--gea-chat-btn-size);
       border-radius:999px;
       border:none;
       cursor:pointer;
@@ -45,7 +47,7 @@
       object-fit:cover;
     }
     .gea-chat-btn .gea-chat-icon{
-      font-size:26px;
+      font-size:calc(var(--gea-chat-btn-size) * 0.45);
       color:#fff;
       font-family:Arial, sans-serif;
     }
@@ -75,6 +77,7 @@
       }
       .gea-chat-btn{
         ${position === "left" ? "left:15px;" : "right:15px;"}
+        --gea-chat-btn-size: clamp(60px, 18vw, 80px);
       }
     }
   `;
