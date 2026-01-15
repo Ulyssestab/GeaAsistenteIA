@@ -27,7 +27,7 @@
       position:fixed;
       bottom:22px;
       ${position === "left" ? "left:22px;" : "right:22px;"}
-      --gea-chat-btn-size: clamp(64px, 7vw, 88px);
+      --gea-chat-btn-size: clamp(96px, 10.5vw, 132px);
       width:var(--gea-chat-btn-size);
       height:var(--gea-chat-btn-size);
       border-radius:999px;
@@ -107,7 +107,7 @@
       }
       .gea-chat-btn{
         ${position === "left" ? "left:15px;" : "right:15px;"}
-        --gea-chat-btn-size: clamp(60px, 18vw, 80px);
+        --gea-chat-btn-size: clamp(90px, 27vw, 120px);
       }
       .gea-chat-greeting{
         ${position === "left" ? "left:calc(15px + var(--gea-chat-btn-size) + 10px);" : "right:calc(15px + var(--gea-chat-btn-size) + 10px);"}
