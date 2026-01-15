@@ -91,16 +91,14 @@
 <script>
   // Lee parámetros del embed
   const params = new URLSearchParams(location.search);
-  const site = params.get("site") || "";
-  const page = params.get("page") || "";
   const title = decodeURIComponent(params.get("title") || "Asistente");
 
   document.getElementById("title").textContent = title;
 
-  // AJUSTA ESTA RUTA A TU API
-  // Ideal: mismo dominio (eservicios2) para evitar broncas CORS
-  const API_CHAT = "/api/chat";  // <-- tu endpoint IA
-  const API_TTS  = "/api/tts";   // <-- tu endpoint voz (opcional)
+  // Servicio del agente IA
+  const API_CHAT = "https://eservicios2.aguascalientes.gob.mx/geawsns/api/gea/ptl/ws/agente";
+  const AUTH_USER = "apipgea";
+  const AUTH_PASS = "7BD%k8u9@=";
 
   const chat = document.getElementById("chat");
   const txt  = document.getElementById("txt");
@@ -114,24 +112,6 @@
     chat.scrollTop = chat.scrollHeight;
   }
 
-  async function speakIfAvailable(text){
-    // Opcional: si tienes TTS, reproduce audio.
-    // Si no quieres voz aún, elimina esta función.
-    try{
-      const res = await fetch(API_TTS, {
-        method: "POST",
-        headers: { "Content-Type": "application/json; charset=utf-8" },
-        body: JSON.stringify({ text })
-      });
-      if(!res.ok) return;
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const audio = new Audio(url);
-      audio.onended = () => URL.revokeObjectURL(url);
-      await audio.play();
-    }catch(e){}
-  }
-
   async function ask(){
     const q = (txt.value || "").trim();
     if(!q) return;
@@ -142,14 +122,14 @@
     addMsg("Pensando...", "bot");
 
     try{
+      const token = btoa(`${AUTH_USER}:${AUTH_PASS}`);
       const res = await fetch(API_CHAT, {
         method: "POST",
-        headers: { "Content-Type": "application/json; charset=utf-8" },
-        body: JSON.stringify({
-          message: q,
-          site,
-          page
-        })
+        headers: {
+          "Content-Type": "application/json; charset=utf-8",
+          "Authorization": `Basic ${token}`
+        },
+        body: JSON.stringify(q)
       });
 
       if(!res.ok){
@@ -158,12 +138,9 @@
       }
 
       const data = await res.json();
-      const answer = data?.answer || "No encontré respuesta.";
+      const answer = data?.output || "No encontré respuesta.";
 
       chat.lastChild.textContent = answer;
-
-      // Si quieres voz:
-      // await speakIfAvailable(answer);
 
     }catch(err){
       chat.lastChild.textContent = "Error de conexión. Verifica tu servicio.";
