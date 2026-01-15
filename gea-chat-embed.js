@@ -156,7 +156,7 @@
   const pageUrl = encodeURIComponent(location.href);
 
   // Página del widget dentro de TU dominio
-  frame.src = `${base}/avatar/widget.html?site=${hostSite}&page=${pageUrl}&title=${encodeURIComponent(title)}`;
+  frame.src = `${base}/GeaAsistenteHub/widget.html?site=${hostSite}&page=${pageUrl}&title=${encodeURIComponent(title)}`;
 
   function toggle(open) {
     const shouldOpen = typeof open === "boolean" ? open : frame.style.display === "none";
