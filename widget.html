@@ -96,10 +96,8 @@
   document.getElementById("title").textContent = title;
 
   // Servicio del agente IA
-  const API_CHAT = "https://eservicios2.aguascalientes.gob.mx/geawsns/api/gea/ptl/ws/agente";
-  const AUTH_USER = "apipgea";
-  const AUTH_PASS = "7BD%k8u9@=";
-
+  const API_CHAT = "/GeaAsistenteHub/api/agente.ashx";
+  
   const chat = document.getElementById("chat");
   const txt  = document.getElementById("txt");
   const btn  = document.getElementById("btn");
@@ -126,8 +124,7 @@
       const res = await fetch(API_CHAT, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json; charset=utf-8",
-          "Authorization": `Basic ${token}`
+          "Content-Type": "application/json; charset=utf-8"
         },
         body: JSON.stringify(q)
       });
