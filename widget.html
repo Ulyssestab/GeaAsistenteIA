@@ -110,39 +110,43 @@
     chat.scrollTop = chat.scrollHeight;
   }
 
-  async function ask(){
-    const q = (txt.value || "").trim();
-    if(!q) return;
+async function ask(){
+  const q = (txt.value || "").trim();
+  if(!q) return;
 
-    txt.value = "";
-    addMsg(q, "me");
+  txt.value = "";
+  addMsg(q, "me");
+  addMsg("Pensando...", "bot");
 
-    addMsg("Pensando...", "bot");
+  try{
+    const res = await fetch(API_CHAT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json; charset=utf-8" },
+      body: JSON.stringify(q)
+    });
 
-    try{
-      const token = btoa(`${AUTH_USER}:${AUTH_PASS}`);
-      const res = await fetch(API_CHAT, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json; charset=utf-8"
-        },
-        body: JSON.stringify(q)
-      });
+    const raw = await res.text(); // 👈 primero como texto (más seguro)
 
-      if(!res.ok){
-        chat.lastChild.textContent = "No pude conectar con el asistente. Intenta más tarde.";
-        return;
-      }
-
-      const data = await res.json();
-      const answer = data?.output || "No encontré respuesta.";
-
-      chat.lastChild.textContent = answer;
-
-    }catch(err){
-      chat.lastChild.textContent = "Error de conexión. Verifica tu servicio.";
+    if(!res.ok){
+      chat.lastChild.textContent = "No pude conectar con el asistente. (" + res.status + ")";
+      console.log("Respuesta error:", raw);
+      return;
     }
+
+    // Intentar parsear JSON (si viene JSON)
+    let data = null;
+    try { data = JSON.parse(raw); } catch(e) {}
+
+    // Si viene JSON, usa .output, si no, usa el texto tal cual
+    const answer = (data && (data.output || data.answer || data.respuesta)) ? (data.output || data.answer || data.respuesta) : raw;
+
+    chat.lastChild.textContent = answer || "No encontré respuesta.";
+  }catch(err){
+    console.error("Error en fetch:", err);
+    chat.lastChild.textContent = "Error de conexión. Verifica tu servicio.";
   }
+}
+
 
   btn.addEventListener("click", ask);
   txt.addEventListener("keydown", (e) => {
