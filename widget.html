@@ -111,6 +111,24 @@
       align-items:center;
       gap:10px;
     }
+    .voice-msg{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      align-items:flex-start;
+    }
+    .voice-avatar{
+      width:40px;
+      height:40px;
+      border-radius:50%;
+      object-fit:cover;
+      background:#eef1f7;
+      border:1px solid #e2e6f0;
+    }
+    .voice-text{
+      font-size:13px;
+      color:#1c2333;
+    }
     .mic-btn{
       border:none;
       padding:10px 14px;
@@ -207,6 +225,7 @@
   let recognition = null;
   let listening = false;
   let activeMode = "text";
+  let voiceBubble = null;
 
   function addMsg(text, who){
     const div = document.createElement("div");
@@ -216,12 +235,16 @@
     chat.scrollTop = chat.scrollHeight;
   }
 
-async function ask(){
+async function ask(source = "text"){
   const q = (txt.value || "").trim();
   if(!q) return;
 
   txt.value = "";
-  addMsg(q, "me");
+  if (source === "voice" && voiceBubble) {
+    updateVoiceBubbleText(q);
+  } else {
+    addMsg(q, "me");
+  }
   addMsg("Pensando...", "bot");
 
   try{
@@ -253,6 +276,35 @@ async function ask(){
   }
 }
 
+function createVoiceBubble(){
+  if (voiceBubble) return;
+  const bubble = document.createElement("div");
+  bubble.className = "msg bot voice-msg";
+  bubble.innerHTML = `
+    <img class="voice-avatar" src="avatar_talking.gif" alt="Avatar hablando" />
+    <div class="voice-text">Escuchando...</div>
+  `;
+  chat.appendChild(bubble);
+  chat.scrollTop = chat.scrollHeight;
+  voiceBubble = bubble;
+}
+
+function updateVoiceBubbleText(text){
+  if (!voiceBubble) return;
+  const textNode = voiceBubble.querySelector(".voice-text");
+  if (textNode) {
+    textNode.textContent = text || "Escuchando...";
+  }
+}
+
+function setVoiceBubbleActive(isActive){
+  if (!voiceBubble) return;
+  const avatar = voiceBubble.querySelector(".voice-avatar");
+  if (avatar) {
+    avatar.src = isActive ? "avatar_talking.gif" : "avatar_idle.png";
+  }
+}
+
 function updateMode(mode){
   activeMode = mode;
   const isText = mode === "text";
@@ -281,44 +333,59 @@ function stopListening(){
     recognition.stop();
   }
   listening = false;
+  setVoiceBubbleActive(false);
   setVoiceStatus("Presiona para dictar tu consulta.", false);
 }
 
 function startListening(){
+  createVoiceBubble();
   if (!recognition){
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition){
       setVoiceStatus("Tu navegador no soporta reconocimiento de voz.", false);
+      updateVoiceBubbleText("Tu navegador no soporta reconocimiento de voz.");
+      setVoiceBubbleActive(false);
       return;
     }
     recognition = new SpeechRecognition();
     recognition.lang = "es-ES";
-    recognition.interimResults = false;
+    recognition.interimResults = true;
     recognition.maxAlternatives = 1;
 
     recognition.addEventListener("result", (event) => {
-      const transcript = event.results?.[0]?.[0]?.transcript || "";
+      const transcript = Array.from(event.results)
+        .map((result) => result[0]?.transcript || "")
+        .join("")
+        .trim();
       if (transcript){
-        txt.value = transcript;
-        stopListening();
-        ask();
+        updateVoiceBubbleText(transcript);
+        if (event.results[event.results.length - 1].isFinal){
+          txt.value = transcript;
+          stopListening();
+          ask("voice");
+        }
       }
     });
 
     recognition.addEventListener("error", () => {
       setVoiceStatus("No pude escuchar. Intenta de nuevo.", false);
+      updateVoiceBubbleText("No pude escuchar. Intenta de nuevo.");
+      setVoiceBubbleActive(false);
       listening = false;
     });
 
     recognition.addEventListener("end", () => {
       if (listening){
         setVoiceStatus("No se detectó voz. Intenta nuevamente.", false);
+        updateVoiceBubbleText("No se detectó voz. Intenta nuevamente.");
+        setVoiceBubbleActive(false);
         listening = false;
       }
     });
   }
 
   listening = true;
+  setVoiceBubbleActive(true);
   setVoiceStatus("Escuchando... Habla ahora.", true);
   recognition.start();
 }
