@@ -190,4 +190,10 @@
     if (e.key === "Escape") toggle(false);
   });
 
+  window.addEventListener("message", (e) => {
+    if (e.data?.type === "GEA_CHAT_CLOSE") {
+      toggle(false);
+    }
+  });
+
 })();
