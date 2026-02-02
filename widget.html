@@ -65,10 +65,39 @@
     .bot{ align-self:flex-start; background:#fff; color:#111; border-bottom-left-radius:6px; }
     .bar{
       display:flex;
-      gap:8px;
+      flex-direction:column;
+      gap:10px;
       padding:10px;
       background:#fff;
       border-top:1px solid #e7e7e7;
+    }
+    .mode-toggle{
+      display:flex;
+      gap:6px;
+      background:#f1f3f8;
+      border-radius:999px;
+      padding:4px;
+      align-self:flex-start;
+    }
+    .mode-btn{
+      border:none;
+      background:transparent;
+      color:#3b4a64;
+      font-weight:700;
+      padding:6px 12px;
+      border-radius:999px;
+      cursor:pointer;
+      font-size:12px;
+    }
+    .mode-btn.active{
+      background:#0b5cff;
+      color:#fff;
+      box-shadow:0 6px 16px rgba(11,92,255,.25);
+    }
+    .input-row{
+      display:flex;
+      gap:8px;
+      align-items:center;
     }
     input{
       flex:1;
@@ -76,6 +105,48 @@
       border-radius:12px;
       border:1px solid #ddd;
       outline:none;
+    }
+    .voice-row{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .voice-msg{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      align-items:flex-start;
+    }
+    .voice-avatar{
+      width:40px;
+      height:40px;
+      border-radius:50%;
+      object-fit:cover;
+      background:#eef1f7;
+      border:1px solid #e2e6f0;
+    }
+    .voice-text{
+      font-size:13px;
+      color:#1c2333;
+    }
+    .mic-btn{
+      border:none;
+      padding:10px 14px;
+      border-radius:12px;
+      background:#0b5cff;
+      color:#fff;
+      font-weight:700;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      gap:6px;
+    }
+    .mic-btn.active{
+      background:#f03e3e;
+    }
+    .voice-status{
+      font-size:12px;
+      color:#4a5875;
     }
     button{
       border:none;
@@ -110,8 +181,21 @@
     <div class="hint" id="hint">Escribe tu pregunta…</div>
 
     <div class="bar">
-      <input id="txt" placeholder="Ej: ¿Qué trámites puedo realizar?" />
-      <button id="btn">Enviar</button>
+      <div class="mode-toggle" role="tablist" aria-label="Modo de conversación">
+        <button class="mode-btn active" id="mode-text" type="button" role="tab" aria-selected="true">Texto</button>
+        <button class="mode-btn" id="mode-voice" type="button" role="tab" aria-selected="false">Voz</button>
+      </div>
+      <div class="input-row" id="text-row">
+        <input id="txt" placeholder="Ej: ¿Qué trámites puedo realizar?" />
+        <button id="btn">Enviar</button>
+      </div>
+      <div class="voice-row" id="voice-row" hidden>
+        <button class="mic-btn" id="mic-btn" type="button">
+          <span id="mic-icon">🎙️</span>
+          <span id="mic-label">Hablar</span>
+        </button>
+        <div class="voice-status" id="voice-status">Presiona para dictar tu consulta.</div>
+      </div>
     </div>
   </div>
 
@@ -129,6 +213,19 @@
   const txt  = document.getElementById("txt");
   const btn  = document.getElementById("btn");
   const minBtn = document.getElementById("min-btn");
+  const modeTextBtn = document.getElementById("mode-text");
+  const modeVoiceBtn = document.getElementById("mode-voice");
+  const textRow = document.getElementById("text-row");
+  const voiceRow = document.getElementById("voice-row");
+  const micBtn = document.getElementById("mic-btn");
+  const micIcon = document.getElementById("mic-icon");
+  const micLabel = document.getElementById("mic-label");
+  const voiceStatus = document.getElementById("voice-status");
+  const hint = document.getElementById("hint");
+  let recognition = null;
+  let listening = false;
+  let activeMode = "text";
+  let voiceBubble = null;
 
   function addMsg(text, who){
     const div = document.createElement("div");
@@ -138,12 +235,16 @@
     chat.scrollTop = chat.scrollHeight;
   }
 
-async function ask(){
+async function ask(source = "text"){
   const q = (txt.value || "").trim();
   if(!q) return;
 
   txt.value = "";
-  addMsg(q, "me");
+  if (source === "voice" && voiceBubble) {
+    updateVoiceBubbleText(q);
+  } else {
+    addMsg(q, "me");
+  }
   addMsg("Pensando...", "bot");
 
   try{
@@ -175,6 +276,120 @@ async function ask(){
   }
 }
 
+function createVoiceBubble(){
+  if (voiceBubble) return;
+  const bubble = document.createElement("div");
+  bubble.className = "msg bot voice-msg";
+  bubble.innerHTML = `
+    <img class="voice-avatar" src="avatar_talking.gif" alt="Avatar hablando" />
+    <div class="voice-text">Escuchando...</div>
+  `;
+  chat.appendChild(bubble);
+  chat.scrollTop = chat.scrollHeight;
+  voiceBubble = bubble;
+}
+
+function updateVoiceBubbleText(text){
+  if (!voiceBubble) return;
+  const textNode = voiceBubble.querySelector(".voice-text");
+  if (textNode) {
+    textNode.textContent = text || "Escuchando...";
+  }
+}
+
+function setVoiceBubbleActive(isActive){
+  if (!voiceBubble) return;
+  const avatar = voiceBubble.querySelector(".voice-avatar");
+  if (avatar) {
+    avatar.src = isActive ? "avatar_talking.gif" : "avatar_idle.png";
+  }
+}
+
+function updateMode(mode){
+  activeMode = mode;
+  const isText = mode === "text";
+  modeTextBtn.classList.toggle("active", isText);
+  modeTextBtn.setAttribute("aria-selected", isText.toString());
+  modeVoiceBtn.classList.toggle("active", !isText);
+  modeVoiceBtn.setAttribute("aria-selected", (!isText).toString());
+  textRow.hidden = !isText;
+  voiceRow.hidden = isText;
+  hint.textContent = isText ? "Escribe tu pregunta…" : "Habla y envía tu consulta por voz.";
+  if (isText) {
+    txt.focus();
+    stopListening();
+  }
+}
+
+function setVoiceStatus(message, isActive){
+  voiceStatus.textContent = message;
+  micBtn.classList.toggle("active", isActive);
+  micLabel.textContent = isActive ? "Detener" : "Hablar";
+  micIcon.textContent = isActive ? "⏹️" : "🎙️";
+}
+
+function stopListening(){
+  if (recognition && listening){
+    recognition.stop();
+  }
+  listening = false;
+  setVoiceBubbleActive(false);
+  setVoiceStatus("Presiona para dictar tu consulta.", false);
+}
+
+function startListening(){
+  createVoiceBubble();
+  if (!recognition){
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition){
+      setVoiceStatus("Tu navegador no soporta reconocimiento de voz.", false);
+      updateVoiceBubbleText("Tu navegador no soporta reconocimiento de voz.");
+      setVoiceBubbleActive(false);
+      return;
+    }
+    recognition = new SpeechRecognition();
+    recognition.lang = "es-ES";
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 1;
+
+    recognition.addEventListener("result", (event) => {
+      const transcript = Array.from(event.results)
+        .map((result) => result[0]?.transcript || "")
+        .join("")
+        .trim();
+      if (transcript){
+        updateVoiceBubbleText(transcript);
+        if (event.results[event.results.length - 1].isFinal){
+          txt.value = transcript;
+          stopListening();
+          ask("voice");
+        }
+      }
+    });
+
+    recognition.addEventListener("error", () => {
+      setVoiceStatus("No pude escuchar. Intenta de nuevo.", false);
+      updateVoiceBubbleText("No pude escuchar. Intenta de nuevo.");
+      setVoiceBubbleActive(false);
+      listening = false;
+    });
+
+    recognition.addEventListener("end", () => {
+      if (listening){
+        setVoiceStatus("No se detectó voz. Intenta nuevamente.", false);
+        updateVoiceBubbleText("No se detectó voz. Intenta nuevamente.");
+        setVoiceBubbleActive(false);
+        listening = false;
+      }
+    });
+  }
+
+  listening = true;
+  setVoiceBubbleActive(true);
+  setVoiceStatus("Escuchando... Habla ahora.", true);
+  recognition.start();
+}
+
 
   btn.addEventListener("click", ask);
   txt.addEventListener("keydown", (e) => {
@@ -191,6 +406,16 @@ async function ask(){
 
   minBtn.addEventListener("click", () => {
     window.parent?.postMessage({ type: "GEA_CHAT_CLOSE" }, "*");
+  });
+
+  modeTextBtn.addEventListener("click", () => updateMode("text"));
+  modeVoiceBtn.addEventListener("click", () => updateMode("voice"));
+  micBtn.addEventListener("click", () => {
+    if (listening){
+      stopListening();
+      return;
+    }
+    startListening();
   });
 
   // Mensaje inicial
