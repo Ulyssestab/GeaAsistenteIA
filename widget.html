@@ -22,6 +22,28 @@
       justify-content:space-between;
     }
     .top small{ font-weight:400; opacity:.9; }
+    .top-actions{
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .minimize-btn{
+      border:none;
+      background:transparent;
+      color:#fff;
+      font-weight:600;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      gap:6px;
+      padding:4px 6px;
+      border-radius:8px;
+    }
+    .minimize-btn:hover,
+    .minimize-btn:focus{
+      background:rgba(255,255,255,.15);
+      outline:none;
+    }
     .chat{
       flex:1;
       overflow:auto;
@@ -76,7 +98,12 @@
   <div class="wrap">
     <div class="top">
       <div id="title">Asistente</div>
-      <small>IA</small>
+      <div class="top-actions">
+        <small>IA</small>
+        <button class="minimize-btn" id="min-btn" type="button" aria-label="Minimizar chat">
+          <span>—</span>
+        </button>
+      </div>
     </div>
 
     <div class="chat" id="chat"></div>
@@ -101,6 +128,7 @@
   const chat = document.getElementById("chat");
   const txt  = document.getElementById("txt");
   const btn  = document.getElementById("btn");
+  const minBtn = document.getElementById("min-btn");
 
   function addMsg(text, who){
     const div = document.createElement("div");
@@ -159,6 +187,10 @@ async function ask(){
     if(e.data?.type === "GEA_CHAT_OPEN"){
       setTimeout(() => txt.focus(), 50);
     }
+  });
+
+  minBtn.addEventListener("click", () => {
+    window.parent?.postMessage({ type: "GEA_CHAT_CLOSE" }, "*");
   });
 
   // Mensaje inicial
