@@ -10,6 +10,7 @@
   const position = (me.getAttribute("data-position") || "right").toLowerCase(); // right | left
   const avatar = me.getAttribute("data-avatar") || "";
   const zIndex = parseInt(me.getAttribute("data-z") || "999999", 10);
+  const tts = (me.getAttribute("data-tts") || "browser").toLowerCase(); // browser | azure | elevenlabs
 
   if (!base) {
     console.error("[GEA-CHAT] Falta data-base");
@@ -156,7 +157,7 @@
   const pageUrl = encodeURIComponent(location.href);
 
   // Página del widget dentro de TU dominio
-  frame.src = `${base}/GeaAsistenteHub/widget.html?site=${hostSite}&page=${pageUrl}&title=${encodeURIComponent(title)}`;
+  frame.src = `${base}/GeaAsistenteHub/widget.html?site=${hostSite}&page=${pageUrl}&title=${encodeURIComponent(title)}&tts=${encodeURIComponent(tts)}`;
 
   function toggle(open) {
     const shouldOpen = typeof open === "boolean" ? open : frame.style.display === "none";

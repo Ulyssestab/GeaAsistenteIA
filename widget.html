@@ -209,6 +209,19 @@
   // Servicio del agente IA
   const API_CHAT = "/GeaAsistenteHub/api/agente.ashx";
   
+
+  // Servicio TTS (texto -> voz)
+  const API_TTS = "/GeaAsistenteHub/api/tts.ashx";
+
+  // Proveedor TTS: browser | azure | elevenlabs (viene del embed: ?tts=)
+  let ttsProvider = (params.get("tts") || "").toLowerCase()
+    || localStorage.getItem("gea_tts_provider")
+    || "browser";
+
+  // Estado de reproducción TTS
+  let speaking = false;
+  let audioEl = null;
+
   const chat = document.getElementById("chat");
   const txt  = document.getElementById("txt");
   const btn  = document.getElementById("btn");
@@ -269,7 +282,15 @@ async function ask(source = "text"){
     // Si viene JSON, usa .output, si no, usa el texto tal cual
     const answer = (data && (data.output || data.answer || data.respuesta)) ? (data.output || data.answer || data.respuesta) : raw;
 
+    
     chat.lastChild.textContent = answer || "No encontré respuesta.";
+
+    // ✅ Si estamos en modo voz: mostrar respuesta en burbuja + hablarla
+    if (activeMode === "voice"){
+      createVoiceBubble();
+      updateVoiceBubbleText(answer || "No encontré respuesta.");
+      await speak(answer);
+    }
   }catch(err){
     console.error("Error en fetch:", err);
     chat.lastChild.textContent = "Error de conexión. Verifica tu servicio.";
@@ -281,7 +302,7 @@ function createVoiceBubble(){
   const bubble = document.createElement("div");
   bubble.className = "msg bot voice-msg";
   bubble.innerHTML = `
-    <img class="voice-avatar" src="avatar_talking.gif" alt="Avatar hablando" />
+    <img class="voice-avatar" src="avatar_idle.png" alt="Avatar hablando" />
     <div class="voice-text">Escuchando...</div>
   `;
   chat.appendChild(bubble);
@@ -305,6 +326,93 @@ function setVoiceBubbleActive(isActive){
   }
 }
 
+
+function stopSpeaking(){
+  // Detener audio remoto
+  if (audioEl){
+    try { audioEl.pause(); } catch(e){}
+    try { audioEl.src = ""; } catch(e){}
+    audioEl = null;
+  }
+  // Detener TTS del navegador
+  if ("speechSynthesis" in window){
+    try { speechSynthesis.cancel(); } catch(e){}
+  }
+  speaking = false;
+  // Si no estamos escuchando, vuelve a idle
+  if (!listening) setVoiceBubbleActive(false);
+}
+
+async function speak(text){
+  if (!text || activeMode !== "voice") return;
+
+  createVoiceBubble();
+  stopSpeaking();
+
+  speaking = true;
+  setVoiceBubbleActive(true);
+
+  // 1) Gratis: voz del navegador
+  if (ttsProvider === "browser"){
+    if (!("speechSynthesis" in window)){
+      updateVoiceBubbleText("Este navegador no soporta síntesis de voz.");
+      speaking = false;
+      setVoiceBubbleActive(false);
+      return;
+    }
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "es-MX";
+    u.rate = 1;
+    u.pitch = 1;
+    u.onend = () => { speaking = false; setVoiceBubbleActive(false); };
+    u.onerror = () => { speaking = false; setVoiceBubbleActive(false); };
+    speechSynthesis.speak(u);
+    return;
+  }
+
+  // 2) Proveedores externos vía backend (Azure/ElevenLabs)
+  try{
+    const r = await fetch(API_TTS, {
+      method: "POST",
+      headers: { "Content-Type": "application/json; charset=utf-8" },
+      body: JSON.stringify({ text, provider: ttsProvider, lang: "es-MX" })
+    });
+
+    if (!r.ok){
+      updateVoiceBubbleText("No pude generar voz (" + r.status + ").");
+      speaking = false;
+      setVoiceBubbleActive(false);
+      return;
+    }
+
+    const buf = await r.arrayBuffer();
+    const ct = r.headers.get("Content-Type") || "audio/mpeg";
+    const blob = new Blob([buf], { type: ct });
+    const url = URL.createObjectURL(blob);
+
+    audioEl = new Audio(url);
+    audioEl.onended = () => {
+      URL.revokeObjectURL(url);
+      audioEl = null;
+      speaking = false;
+      setVoiceBubbleActive(false);
+    };
+    audioEl.onerror = () => {
+      URL.revokeObjectURL(url);
+      audioEl = null;
+      speaking = false;
+      setVoiceBubbleActive(false);
+    };
+
+    await audioEl.play();
+  }catch(e){
+    updateVoiceBubbleText("Error reproduciendo voz.");
+    speaking = false;
+    setVoiceBubbleActive(false);
+  }
+}
+
+
 function updateMode(mode){
   activeMode = mode;
   const isText = mode === "text";
@@ -318,6 +426,7 @@ function updateMode(mode){
   if (isText) {
     txt.focus();
     stopListening();
+    stopSpeaking();
   }
 }
 
@@ -333,12 +442,13 @@ function stopListening(){
     recognition.stop();
   }
   listening = false;
-  setVoiceBubbleActive(false);
+  if (!speaking) setVoiceBubbleActive(false);
   setVoiceStatus("Presiona para dictar tu consulta.", false);
 }
 
 function startListening(){
   createVoiceBubble();
+  stopSpeaking();
   if (!recognition){
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition){
@@ -348,7 +458,7 @@ function startListening(){
       return;
     }
     recognition = new SpeechRecognition();
-    recognition.lang = "es-ES";
+    recognition.lang = "es-MX";
     recognition.interimResults = true;
     recognition.maxAlternatives = 1;
 
@@ -385,7 +495,7 @@ function startListening(){
   }
 
   listening = true;
-  setVoiceBubbleActive(true);
+  setVoiceBubbleActive(false);
   setVoiceStatus("Escuchando... Habla ahora.", true);
   recognition.start();
 }
