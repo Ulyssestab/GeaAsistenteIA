@@ -1,47 +1,48 @@
 (() => {
-  // Encuentra ESTE script y lee atributos data-*
   const me = document.currentScript || (() => {
     const scripts = document.getElementsByTagName("script");
     return scripts[scripts.length - 1];
   })();
 
   const base = (me.getAttribute("data-base") || "").replace(/\/$/, "");
-  const title = me.getAttribute("data-title") || "Asistente";
-  const position = (me.getAttribute("data-position") || "right").toLowerCase(); // right | left
+  const title = me.getAttribute("data-title") || "Asistente Gobierno";
+  const position = (me.getAttribute("data-position") || "right").toLowerCase();
   const avatar = me.getAttribute("data-avatar") || "";
+  const avatarTalk = me.getAttribute("data-avatar-talking") || "";
   const zIndex = parseInt(me.getAttribute("data-z") || "999999", 10);
-  const tts = (me.getAttribute("data-tts") || "browser").toLowerCase(); // browser | azure | elevenlabs
+  const tts = (me.getAttribute("data-tts") || "browser").toLowerCase();
 
   if (!base) {
     console.error("[GEA-CHAT] Falta data-base");
     return;
   }
 
-  // Evita doble carga
   if (window.__GEA_CHAT_WIDGET_LOADED__) return;
   window.__GEA_CHAT_WIDGET_LOADED__ = true;
 
-  // CSS
   const style = document.createElement("style");
   style.textContent = `
     .gea-chat-btn{
       position:fixed;
-      bottom:22px;
+      bottom:24px;
       ${position === "left" ? "left:22px;" : "right:22px;"}
-      --gea-chat-btn-size: clamp(96px, 10.5vw, 132px);
-      width:var(--gea-chat-btn-size);
-      height:var(--gea-chat-btn-size);
+      width:78px;
+      height:78px;
       border-radius:999px;
       border:none;
       cursor:pointer;
-      box-shadow:0 10px 25px rgba(0,0,0,.25);
-      background:#0b5cff;
+      box-shadow:0 10px 24px rgba(15,23,42,.22);
+      background:#ffffff;
       display:flex;
       align-items:center;
       justify-content:center;
       z-index:${zIndex};
       overflow:hidden;
-      animation: gea-chat-bob 2.4s ease-in-out infinite;
+      transition:transform .2s ease, box-shadow .2s ease;
+    }
+    .gea-chat-btn:hover{
+      transform:translateY(-2px);
+      box-shadow:0 14px 28px rgba(15,23,42,.25);
     }
     .gea-chat-btn img{
       width:100%;
@@ -49,14 +50,14 @@
       object-fit:cover;
     }
     .gea-chat-btn .gea-chat-icon{
-      font-size:calc(var(--gea-chat-btn-size) * 0.45);
-      color:#fff;
+      font-size:30px;
+      color:#1e6bff;
       font-family:Arial, sans-serif;
     }
     .gea-chat-greeting{
       position:fixed;
-      bottom: calc(22px + (var(--gea-chat-btn-size) / 2) - 18px);
-      ${position === "left" ? "left:calc(22px + var(--gea-chat-btn-size) + 10px);" : "right:calc(22px + var(--gea-chat-btn-size) + 10px);"}
+      bottom: calc(24px + 39px - 18px);
+      ${position === "left" ? "left:110px;" : "right:110px;"}
       background:#ffffff;
       color:#1a1a1a;
       padding:10px 14px;
@@ -85,15 +86,15 @@
 
     .gea-chat-frame{
       position:fixed;
-      bottom:95px;
+      bottom:115px;
       ${position === "left" ? "left:22px;" : "right:22px;"}
       width:360px;
       max-width: calc(100vw - 44px);
-      height:520px;
-      max-height: calc(100vh - 140px);
+      height:560px;
+      max-height: calc(100vh - 160px);
       border:none;
-      border-radius:18px;
-      box-shadow:0 18px 60px rgba(0,0,0,.35);
+      border-radius:22px;
+      box-shadow:0 18px 60px rgba(0,0,0,.3);
       z-index:${zIndex};
       overflow:hidden;
       display:none;
@@ -108,17 +109,14 @@
       }
       .gea-chat-btn{
         ${position === "left" ? "left:15px;" : "right:15px;"}
-        --gea-chat-btn-size: clamp(90px, 27vw, 120px);
+        width:70px;
+        height:70px;
       }
       .gea-chat-greeting{
-        ${position === "left" ? "left:calc(15px + var(--gea-chat-btn-size) + 10px);" : "right:calc(15px + var(--gea-chat-btn-size) + 10px);"}
-        bottom: calc(22px + (var(--gea-chat-btn-size) / 2) - 18px);
+        ${position === "left" ? "left:100px;" : "right:100px;"}
+        bottom: calc(24px + 35px - 18px);
         font-size:13px;
       }
-    }
-    @keyframes gea-chat-bob{
-      0%, 100%{ transform:translateY(0); box-shadow:0 10px 25px rgba(0,0,0,.25); }
-      50%{ transform:translateY(-6px); box-shadow:0 16px 30px rgba(0,0,0,.2); }
     }
     @keyframes gea-chat-greeting{
       0%{ opacity:0; transform:translateY(6px); }
@@ -129,7 +127,6 @@
   `;
   document.head.appendChild(style);
 
-  // Botón flotante
   const btn = document.createElement("button");
   btn.className = "gea-chat-btn";
   btn.type = "button";
@@ -147,23 +144,21 @@
     btn.appendChild(span);
   }
 
-  // Iframe del chat (UI completa)
   const frame = document.createElement("iframe");
   frame.className = "gea-chat-frame";
   frame.title = title;
 
-  // Puedes pasar el origen del sitio donde se incrusta + ruta actual
   const hostSite = encodeURIComponent(location.origin);
   const pageUrl = encodeURIComponent(location.href);
+  const avatarParam = encodeURIComponent(avatar || "");
+  const avatarTalkParam = encodeURIComponent(avatarTalk || "");
 
-  // Página del widget dentro de TU dominio
-  frame.src = `${base}/GeaAsistenteHub/widget.html?site=${hostSite}&page=${pageUrl}&title=${encodeURIComponent(title)}&tts=${encodeURIComponent(tts)}`;
+  frame.src = `${base}/GeaAsistenteHub/widget.html?site=${hostSite}&page=${pageUrl}&title=${encodeURIComponent(title)}&tts=${encodeURIComponent(tts)}&avatar=${avatarParam}&avatarTalk=${avatarTalkParam}`;
 
   function toggle(open) {
     const shouldOpen = typeof open === "boolean" ? open : frame.style.display === "none";
     frame.style.display = shouldOpen ? "block" : "none";
 
-    // Opcional: avisar al iframe para enfocar input
     if (shouldOpen) {
       frame.contentWindow?.postMessage({ type: "GEA_CHAT_OPEN" }, base);
     }
@@ -186,7 +181,6 @@
 
   btn.addEventListener("click", dismissGreeting);
 
-  // Cerrar con ESC (opcional)
   window.addEventListener("keydown", (e) => {
     if (e.key === "Escape") toggle(false);
   });
