@@ -11,6 +11,7 @@
   const avatarTalk = me.getAttribute("data-avatar-talking") || "";
   const zIndex = parseInt(me.getAttribute("data-z") || "999999", 10);
   const tts = (me.getAttribute("data-tts") || "browser").toLowerCase();
+  const greetingText = me.getAttribute("data-greeting") || "HOLA SOY ANIA, EN QUE PUEDO AYUDARTE";
 
   if (!base) {
     console.error("[GEA-CHAT] Falta data-base");
@@ -26,28 +27,30 @@
       position:fixed;
       bottom:24px;
       ${position === "left" ? "left:22px;" : "right:22px;"}
-      width:78px;
-      height:78px;
-      border-radius:999px;
+      width:96px;
+      height:96px;
+      border-radius:0;
       border:none;
       cursor:pointer;
       box-shadow:0 10px 24px rgba(15,23,42,.22);
-      background:#ffffff;
+      background:transparent;
       display:flex;
       align-items:center;
       justify-content:center;
       z-index:${zIndex};
-      overflow:hidden;
+      overflow:visible;
       transition:transform .2s ease, box-shadow .2s ease;
+      animation: gea-chat-float 3s ease-in-out infinite;
     }
     .gea-chat-btn:hover{
-      transform:translateY(-2px);
+      transform:translateY(-6px);
       box-shadow:0 14px 28px rgba(15,23,42,.25);
     }
     .gea-chat-btn img{
       width:100%;
       height:100%;
-      object-fit:cover;
+      object-fit:contain;
+      filter:drop-shadow(0 8px 18px rgba(15,23,42,.28));
     }
     .gea-chat-btn .gea-chat-icon{
       font-size:30px;
@@ -58,8 +61,8 @@
       position:fixed;
       bottom: calc(24px + 39px - 18px);
       ${position === "left" ? "left:110px;" : "right:110px;"}
-      background:#ffffff;
-      color:#1a1a1a;
+      background:#ffe064;
+      color:#2b2b2b;
       padding:10px 14px;
       border-radius:999px;
       box-shadow:0 12px 30px rgba(0,0,0,.18);
@@ -79,7 +82,7 @@
       ${position === "left" ? "left:-6px;" : "right:-6px;"}
       width:10px;
       height:10px;
-      background:#ffffff;
+      background:#ffe064;
       transform:translateY(-50%) rotate(45deg);
       box-shadow:0 12px 30px rgba(0,0,0,.12);
     }
@@ -109,8 +112,8 @@
       }
       .gea-chat-btn{
         ${position === "left" ? "left:15px;" : "right:15px;"}
-        width:70px;
-        height:70px;
+        width:78px;
+        height:78px;
       }
       .gea-chat-greeting{
         ${position === "left" ? "left:100px;" : "right:100px;"}
@@ -123,6 +126,11 @@
       15%{ opacity:1; transform:translateY(0); }
       70%{ opacity:1; transform:translateY(0); }
       100%{ opacity:0; transform:translateY(6px); }
+    }
+    @keyframes gea-chat-float{
+      0%{ transform:translateY(0); }
+      50%{ transform:translateY(-6px); }
+      100%{ transform:translateY(0); }
     }
   `;
   document.head.appendChild(style);
@@ -171,7 +179,7 @@
 
   const greeting = document.createElement("div");
   greeting.className = "gea-chat-greeting";
-  greeting.textContent = "¡Hola! ¿Necesitas ayuda?";
+  greeting.textContent = greetingText;
   document.body.appendChild(greeting);
 
   const dismissGreeting = () => {
