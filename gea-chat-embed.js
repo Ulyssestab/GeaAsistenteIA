@@ -27,30 +27,32 @@
       position:fixed;
       bottom:24px;
       ${position === "left" ? "left:22px;" : "right:22px;"}
-      width:96px;
-      height:96px;
+      width:88px;
+      height:88px;
       border-radius:0;
       border:none;
       cursor:pointer;
-      box-shadow:0 10px 24px rgba(15,23,42,.22);
       background:transparent;
       display:flex;
       align-items:center;
       justify-content:center;
       z-index:${zIndex};
       overflow:visible;
-      transition:transform .2s ease, box-shadow .2s ease;
+      transition:transform .2s ease;
       animation: gea-chat-float 3s ease-in-out infinite;
     }
     .gea-chat-btn:hover{
       transform:translateY(-6px);
-      box-shadow:0 14px 28px rgba(15,23,42,.25);
     }
     .gea-chat-btn img{
       width:100%;
       height:100%;
       object-fit:contain;
-      filter:drop-shadow(0 8px 18px rgba(15,23,42,.28));
+      background:transparent;
+      border:0;
+      border-radius:0;
+      box-shadow:none;
+      filter:none;
     }
     .gea-chat-btn .gea-chat-icon{
       font-size:30px;
@@ -112,8 +114,8 @@
       }
       .gea-chat-btn{
         ${position === "left" ? "left:15px;" : "right:15px;"}
-        width:78px;
-        height:78px;
+        width:72px;
+        height:72px;
       }
       .gea-chat-greeting{
         ${position === "left" ? "left:100px;" : "right:100px;"}
