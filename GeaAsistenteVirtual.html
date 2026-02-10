@@ -39,22 +39,40 @@
 
     /* ----------------- Widget flotante ----------------- */
     #aniaWidget{
-      position: fixed;
-      right: 18px;
-      bottom: 16px;
-      z-index: 9999;
-      user-select: none;
-    }
+  position: fixed;
+  right: 18px;
+  bottom: 16px;
+  z-index: 9999;
+  user-select: none;
+
+  /* ===== AJUSTE RÁPIDO ===== */
+  --avatar-scale: 3;          /* <-- CAMBIA SOLO ESTO (2 = 200%) */
+  --avatar-base-w: 140px;
+  --avatar-base-h: 210px;
+  --hint-right-base: 92px;
+  --hint-bottom-base: 122px;
+  --panel-gap: 25px;
+}
+
+#aniaWidget{
+  transition: opacity .2s ease, transform .2s ease;
+}
+
+#aniaWidget.hidden{
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+}
 
     #aniaLauncherWrap{
-      position: relative;
-      width: 140px;
-      height: 210px;
-      display: flex;
-      align-items: flex-end;
-      justify-content: center;
-      transition: transform .25s ease;
-    }
+  position: relative;
+  width: calc(var(--avatar-base-w) * var(--avatar-scale));
+  height: calc(var(--avatar-base-h) * var(--avatar-scale));
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  transition: transform .25s ease;
+}
 
     #aniaLauncher{
       border: none;
@@ -79,20 +97,20 @@
 
     /* Burbuja estilo ejemplo */
     #aniaHint{
-      position: absolute;
-      right: 92px;
-      bottom: 122px;
-      min-width: 170px;
-      max-width: 220px;
-      background: var(--hint);
-      color: #fff;
-      font-weight: 700;
-      line-height: 1.1;
-      border-radius: 14px;
-      padding: 12px 14px;
-      box-shadow: var(--shadow);
-      cursor: pointer;
-    }
+  position: absolute;
+  right: calc(var(--hint-right-base) * var(--avatar-scale));
+  bottom: calc(var(--hint-bottom-base) * var(--avatar-scale));
+  min-width: 170px;
+  max-width: 220px;
+  background: var(--hint);
+  color: #fff;
+  font-weight: 700;
+  line-height: 1.1;
+  border-radius: 14px;
+  padding: 12px 14px;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+}
     #aniaHint::after{
       content:"";
       position: absolute;
@@ -115,25 +133,25 @@
 
     /* ----------------- Panel de chat ----------------- */
     #chatPanel{
-      position: fixed;
-      right: 18px;
-      bottom: 235px;
-      width: min(380px, calc(100vw - 20px));
-      height: min(620px, calc(100vh - 90px));
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      box-shadow: var(--shadow);
-      display: grid;
-      grid-template-rows: auto auto 1fr auto auto;
-      overflow: hidden;
-      z-index: 9998;
+  position: fixed;
+  right: 18px;
+  bottom: calc((var(--avatar-base-h) * var(--avatar-scale)) + var(--panel-gap));
+  width: min(380px, calc(100vw - 20px));
+  height: min(620px, calc(100vh - 90px));
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  display: grid;
+  grid-template-rows: auto auto 1fr auto auto;
+  overflow: hidden;
+  z-index: 9998;
 
-      opacity: 0;
-      transform: translateY(14px) scale(.98);
-      pointer-events: none;
-      transition: all .22s ease;
-    }
+  opacity: 0;
+  transform: translateY(14px) scale(.98);
+  pointer-events: none;
+  transition: all .22s ease;
+}
     #chatPanel.open{
       opacity: 1;
       transform: translateY(0) scale(1);
@@ -328,24 +346,30 @@
     }
 
     @media (max-width: 520px){
-      #aniaWidget{ right: 10px; bottom: 10px; }
-      #chatPanel{
-        right: 10px;
-        bottom: 200px;
-        width: calc(100vw - 20px);
-        height: calc(100vh - 88px);
-      }
-      #aniaLauncherWrap{
-        width: 122px;
-        height: 180px;
-      }
-      #aniaHint{
-        right: 78px;
-        bottom: 108px;
-        min-width: 140px;
-        font-size: 14px;
-      }
-    }
+  #aniaWidget{
+    right: 10px;
+    bottom: 10px;
+
+    /* bases para móvil (la escala sigue siendo la misma) */
+    --avatar-base-w: 122px;
+    --avatar-base-h: 180px;
+    --hint-right-base: 78px;
+    --hint-bottom-base: 108px;
+    --panel-gap: 20px;
+  }
+
+  #chatPanel{
+    right: 10px;
+    width: calc(100vw - 20px);
+    height: calc(100vh - 88px);
+  }
+
+  #aniaHint{
+    min-width: 140px;
+    font-size: 14px;
+  }
+}
+
   </style>
 </head>
 <body>
@@ -418,7 +442,7 @@
     // Coloca aquí tu endpoint real de IA.
     // Debe aceptar POST JSON { message, sessionId, source, lang }
     // y devolver JSON con: { reply: "texto respuesta" } (o response/message).
-    const AI_ENDPOINT = ""; // Ejemplo: "https://tu-dominio.com/api/chat"
+    const AI_ENDPOINT = "api/agente.ashx"; // Ejemplo: "https://tu-dominio.com/api/chat"
     const AI_API_KEY = "";  // Opcional (Bearer)
 
     const SESSION_ID = (window.crypto?.randomUUID?.() || String(Date.now()));
@@ -454,16 +478,23 @@
     // UI: abrir/cerrar panel
     // ==========================
     function openChat(){
-      panel.classList.add("open");
-      panel.setAttribute("aria-hidden", "false");
-      hint.style.display = "none";
-      if(currentMode === "text") userInput.focus();
-    }
+  panel.classList.add("open");
+  panel.setAttribute("aria-hidden", "false");
+  aniaWidget.classList.add("hidden");   // ocultar avatar al abrir chat
+  hint.style.display = "none";
+  if(currentMode === "text") userInput.focus();
+}
     function closeChat(){
-      panel.classList.remove("open");
-      panel.setAttribute("aria-hidden", "true");
-      if (!messages.children.length) hint.style.display = "block";
-    }
+  panel.classList.remove("open");
+  panel.setAttribute("aria-hidden", "true");
+  aniaWidget.classList.remove("hidden"); // mostrar avatar al cerrar chat
+
+  if (!messages.children.length) {
+    hint.style.display = "block";
+  } else {
+    hint.style.display = "none";
+  }
+}
 
     launcher.addEventListener("click", openChat);
     hint.addEventListener("click", openChat);
@@ -507,37 +538,31 @@
       if(show) messages.scrollTop = messages.scrollHeight;
     }
 
-    async function askAI(message, source = "text"){
-      // Modo demo (sin endpoint)
-      if (!AI_ENDPOINT) {
-        await new Promise(r => setTimeout(r, 600));
-        return `Recibí tu mensaje: "${message}".\n(Conecta AI_ENDPOINT para usar tu IA real).`;
-      }
+async function askAI(message, source = "text"){
+  if (!AI_ENDPOINT) {
+    await new Promise(r => setTimeout(r, 600));
+    return `Recibí tu mensaje: "${message}".\n(Conecta AI_ENDPOINT para usar tu IA real).`;
+  }
 
-      const headers = { "Content-Type": "application/json" };
-      if (AI_API_KEY) headers["Authorization"] = `Bearer ${AI_API_KEY}`;
+  const headers = { "Content-Type": "application/json" };
+  const body = JSON.stringify((message || "").trim()); // <- "hola"
 
-      const payload = {
-        message,
-        source,
-        sessionId: SESSION_ID,
-        lang: "es-MX"
-      };
+  const res = await fetch(AI_ENDPOINT, {
+    method: "POST",
+    headers,
+    body
+  });
 
-      const res = await fetch(AI_ENDPOINT, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(payload)
-      });
+  if (!res.ok) {
+    const txt = await res.text().catch(() => "");
+    throw new Error(`Error ${res.status}: ${txt || "No se pudo obtener respuesta."}`);
+  }
 
-      if (!res.ok) {
-        const txt = await res.text().catch(() => "");
-        throw new Error(`Error ${res.status}: ${txt || "No se pudo obtener respuesta."}`);
-      }
+  const data = await res.json().catch(() => ({}));
+  return data.output || data.reply || data.response || data.message || "No recibí respuesta del servicio.";
+}
 
-      const data = await res.json();
-      return data.reply || data.response || data.message || "No recibí respuesta del servicio.";
-    }
+
 
     async function handleSend(raw, source = "text"){
       const text = (raw || "").trim();
