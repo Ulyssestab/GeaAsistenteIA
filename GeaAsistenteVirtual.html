@@ -1,0 +1,689 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Página con Asistente Ania</title>
+  <style>
+    :root{
+      --bg: #f7f9fc;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --primary: #1d4ed8;
+      --primary-2: #2563eb;
+      --border: #e5e7eb;
+      --user-msg: #1d4ed8;
+      --assistant-msg: #f3f4f6;
+      --hint: #e8d34f;
+      --shadow: 0 10px 30px rgba(0,0,0,.18);
+    }
+
+    * { box-sizing: border-box; }
+    body{
+      margin:0;
+      font-family: "Segoe UI", Roboto, Arial, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      min-height: 100vh;
+    }
+
+    /* Demo de contenido de página */
+    .page-demo{
+      max-width: 980px;
+      margin: 40px auto;
+      padding: 0 16px;
+    }
+    .page-demo h1{ margin-bottom:8px; }
+    .page-demo p{ color: var(--muted); }
+
+    /* ----------------- Widget flotante ----------------- */
+    #aniaWidget{
+      position: fixed;
+      right: 18px;
+      bottom: 16px;
+      z-index: 9999;
+      user-select: none;
+    }
+
+    #aniaLauncherWrap{
+      position: relative;
+      width: 140px;
+      height: 210px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      transition: transform .25s ease;
+    }
+
+    #aniaLauncher{
+      border: none;
+      background: transparent;
+      padding: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+      filter: drop-shadow(0 8px 20px rgba(0,0,0,.25));
+      transition: transform .2s ease;
+    }
+    #aniaLauncher:hover{ transform: translateY(-3px); }
+    #aniaLauncher:active{ transform: translateY(0); }
+
+    #aniaLauncher img{
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      object-position: bottom right;
+      display: block;
+    }
+
+    /* Burbuja estilo ejemplo */
+    #aniaHint{
+      position: absolute;
+      right: 92px;
+      bottom: 122px;
+      min-width: 170px;
+      max-width: 220px;
+      background: var(--hint);
+      color: #fff;
+      font-weight: 700;
+      line-height: 1.1;
+      border-radius: 14px;
+      padding: 12px 14px;
+      box-shadow: var(--shadow);
+      cursor: pointer;
+    }
+    #aniaHint::after{
+      content:"";
+      position: absolute;
+      right: -10px;
+      bottom: 16px;
+      width: 0; height: 0;
+      border-left: 12px solid var(--hint);
+      border-top: 8px solid transparent;
+      border-bottom: 8px solid transparent;
+    }
+
+    /* Animación de "hablando" en el avatar */
+    .speaking #aniaLauncherWrap{
+      animation: talkBob .55s infinite ease-in-out;
+    }
+    @keyframes talkBob{
+      0%,100%{ transform: translateY(0); }
+      50%{ transform: translateY(-5px); }
+    }
+
+    /* ----------------- Panel de chat ----------------- */
+    #chatPanel{
+      position: fixed;
+      right: 18px;
+      bottom: 235px;
+      width: min(380px, calc(100vw - 20px));
+      height: min(620px, calc(100vh - 90px));
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      display: grid;
+      grid-template-rows: auto auto 1fr auto auto;
+      overflow: hidden;
+      z-index: 9998;
+
+      opacity: 0;
+      transform: translateY(14px) scale(.98);
+      pointer-events: none;
+      transition: all .22s ease;
+    }
+    #chatPanel.open{
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+
+    .chat-header{
+      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+      color: #fff;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .chat-header .title{
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+    }
+    .chat-header .dot{
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: #22c55e;
+      box-shadow: 0 0 0 4px rgba(255,255,255,.2);
+    }
+    .icon-btn{
+      border: none;
+      background: rgba(255,255,255,.15);
+      color: #fff;
+      font-size: 16px;
+      border-radius: 10px;
+      width: 34px; height: 34px;
+      cursor: pointer;
+    }
+
+    .tabs{
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding: 10px;
+      border-bottom: 1px solid var(--border);
+      background: #f8fafc;
+    }
+    .tab-btn{
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .tab-btn.active{
+      border-color: var(--primary);
+      color: var(--primary);
+      background: #eff6ff;
+    }
+
+    .messages{
+      padding: 12px;
+      overflow-y: auto;
+      background: #fff;
+    }
+    .msg{
+      display: flex;
+      margin: 8px 0;
+    }
+    .msg.user{ justify-content: flex-end; }
+    .msg.assistant{ justify-content: flex-start; }
+
+    .bubble{
+      max-width: 84%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.35;
+      font-size: 14px;
+      border: 1px solid transparent;
+    }
+    .msg.user .bubble{
+      color: #fff;
+      background: var(--user-msg);
+      border-bottom-right-radius: 4px;
+    }
+    .msg.assistant .bubble{
+      background: var(--assistant-msg);
+      border-color: #e5e7eb;
+      border-bottom-left-radius: 4px;
+    }
+
+    .typing{
+      display: none;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      padding: 0 12px 10px;
+    }
+    .typing.show{ display: flex; }
+    .dots{
+      display:flex; gap:4px;
+    }
+    .dots span{
+      width:6px; height:6px; border-radius:50%;
+      background:#9ca3af;
+      animation: blink 1s infinite;
+    }
+    .dots span:nth-child(2){ animation-delay:.2s; }
+    .dots span:nth-child(3){ animation-delay:.4s; }
+    @keyframes blink{
+      0%,80%,100%{ opacity:.25; transform: translateY(0); }
+      40%{ opacity:1; transform: translateY(-2px); }
+    }
+
+    .controls{
+      border-top: 1px solid var(--border);
+      background: #fff;
+      padding: 10px;
+    }
+
+    .text-controls{
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+    }
+    #userInput{
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 14px;
+      outline: none;
+    }
+    #sendBtn{
+      border: none;
+      border-radius: 10px;
+      background: var(--primary);
+      color: #fff;
+      padding: 0 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .voice-controls{
+      display: none;
+      gap: 8px;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .voice-controls.active{ display: flex; }
+
+    #voiceStatus{
+      color: var(--muted);
+      font-size: 13px;
+      min-height: 18px;
+      flex: 1;
+      padding-right: 8px;
+    }
+
+    #micBtn{
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      min-width: 116px;
+      font-weight: 700;
+    }
+    #micBtn.listening{
+      border-color: #ef4444;
+      color: #ef4444;
+      animation: pulse 1s infinite;
+    }
+    @keyframes pulse{
+      0%{ box-shadow: 0 0 0 0 rgba(239,68,68,.35); }
+      70%{ box-shadow: 0 0 0 14px rgba(239,68,68,0); }
+      100%{ box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+    }
+
+    .settings{
+      border-top: 1px solid var(--border);
+      padding: 8px 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      background: #f8fafc;
+    }
+
+    @media (max-width: 520px){
+      #aniaWidget{ right: 10px; bottom: 10px; }
+      #chatPanel{
+        right: 10px;
+        bottom: 200px;
+        width: calc(100vw - 20px);
+        height: calc(100vh - 88px);
+      }
+      #aniaLauncherWrap{
+        width: 122px;
+        height: 180px;
+      }
+      #aniaHint{
+        right: 78px;
+        bottom: 108px;
+        min-width: 140px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Contenido de tu página -->
+  <main class="page-demo">
+    <h1>Mi página web</h1>
+    <p>
+      Aquí va el contenido de tu sitio. El botón de Ania queda fijo abajo a la derecha y abre el chat.
+    </p>
+  </main>
+
+  <!-- Panel de Chat -->
+  <section id="chatPanel" aria-hidden="true">
+    <div class="chat-header">
+      <div class="title">
+        <span class="dot"></span>
+        <span>Ania · Asistente IA</span>
+      </div>
+      <button id="closeChatBtn" class="icon-btn" aria-label="Cerrar chat">✕</button>
+    </div>
+
+    <div class="tabs">
+      <button id="tabText" class="tab-btn active" type="button">Texto</button>
+      <button id="tabVoice" class="tab-btn" type="button">Voz</button>
+    </div>
+
+    <div id="messages" class="messages"></div>
+
+    <div id="typing" class="typing">
+      <div class="dots"><span></span><span></span><span></span></div>
+      <span>Ania está escribiendo…</span>
+    </div>
+
+    <div class="controls">
+      <div id="textControls" class="text-controls">
+        <input id="userInput" type="text" placeholder="Escribe tu mensaje…" />
+        <button id="sendBtn" type="button">Enviar</button>
+      </div>
+
+      <div id="voiceControls" class="voice-controls">
+        <div id="voiceStatus">Pulsa “Hablar” para dictar tu mensaje.</div>
+        <button id="micBtn" type="button">🎤 Hablar</button>
+      </div>
+    </div>
+
+    <div class="settings">
+      <label>
+        <input id="ttsToggle" type="checkbox" checked />
+        Responder con voz
+      </label>
+    </div>
+  </section>
+
+  <!-- Botón/imagen flotante -->
+  <div id="aniaWidget">
+    <div id="aniaLauncherWrap">
+      <button id="aniaLauncher" aria-label="Abrir chat con Ania" type="button">
+        <!-- Cambia esta ruta por tu imagen real -->
+        <img src="ania.png" alt="Ania saludando" />
+      </button>
+      <div id="aniaHint">¡Hola!<br>Mi nombre es Ania 👋</div>
+    </div>
+  </div>
+
+  <script>
+    // ==========================
+    // CONFIGURACIÓN
+    // ==========================
+    // Coloca aquí tu endpoint real de IA.
+    // Debe aceptar POST JSON { message, sessionId, source, lang }
+    // y devolver JSON con: { reply: "texto respuesta" } (o response/message).
+    const AI_ENDPOINT = ""; // Ejemplo: "https://tu-dominio.com/api/chat"
+    const AI_API_KEY = "";  // Opcional (Bearer)
+
+    const SESSION_ID = (window.crypto?.randomUUID?.() || String(Date.now()));
+
+    // ==========================
+    // ELEMENTOS
+    // ==========================
+    const aniaWidget = document.getElementById("aniaWidget");
+    const launcher = document.getElementById("aniaLauncher");
+    const hint = document.getElementById("aniaHint");
+    const panel = document.getElementById("chatPanel");
+    const closeChatBtn = document.getElementById("closeChatBtn");
+
+    const tabText = document.getElementById("tabText");
+    const tabVoice = document.getElementById("tabVoice");
+
+    const messages = document.getElementById("messages");
+    const typing = document.getElementById("typing");
+
+    const textControls = document.getElementById("textControls");
+    const voiceControls = document.getElementById("voiceControls");
+    const userInput = document.getElementById("userInput");
+    const sendBtn = document.getElementById("sendBtn");
+
+    const micBtn = document.getElementById("micBtn");
+    const voiceStatus = document.getElementById("voiceStatus");
+    const ttsToggle = document.getElementById("ttsToggle");
+
+    let currentMode = "text";
+    let isListening = false;
+
+    // ==========================
+    // UI: abrir/cerrar panel
+    // ==========================
+    function openChat(){
+      panel.classList.add("open");
+      panel.setAttribute("aria-hidden", "false");
+      hint.style.display = "none";
+      if(currentMode === "text") userInput.focus();
+    }
+    function closeChat(){
+      panel.classList.remove("open");
+      panel.setAttribute("aria-hidden", "true");
+      if (!messages.children.length) hint.style.display = "block";
+    }
+
+    launcher.addEventListener("click", openChat);
+    hint.addEventListener("click", openChat);
+    closeChatBtn.addEventListener("click", closeChat);
+
+    // ==========================
+    // Tabs texto / voz
+    // ==========================
+    function setMode(mode){
+      currentMode = mode;
+      const isText = mode === "text";
+
+      tabText.classList.toggle("active", isText);
+      tabVoice.classList.toggle("active", !isText);
+
+      textControls.style.display = isText ? "grid" : "none";
+      voiceControls.classList.toggle("active", !isText);
+
+      if (isText) userInput.focus();
+    }
+
+    tabText.addEventListener("click", () => setMode("text"));
+    tabVoice.addEventListener("click", () => setMode("voice"));
+
+    // ==========================
+    // Mensajes
+    // ==========================
+    function addMessage(role, text){
+      const row = document.createElement("div");
+      row.className = `msg ${role}`;
+      const bubble = document.createElement("div");
+      bubble.className = "bubble";
+      bubble.textContent = text; // evita XSS
+      row.appendChild(bubble);
+      messages.appendChild(row);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function setTyping(show){
+      typing.classList.toggle("show", show);
+      if(show) messages.scrollTop = messages.scrollHeight;
+    }
+
+    async function askAI(message, source = "text"){
+      // Modo demo (sin endpoint)
+      if (!AI_ENDPOINT) {
+        await new Promise(r => setTimeout(r, 600));
+        return `Recibí tu mensaje: "${message}".\n(Conecta AI_ENDPOINT para usar tu IA real).`;
+      }
+
+      const headers = { "Content-Type": "application/json" };
+      if (AI_API_KEY) headers["Authorization"] = `Bearer ${AI_API_KEY}`;
+
+      const payload = {
+        message,
+        source,
+        sessionId: SESSION_ID,
+        lang: "es-MX"
+      };
+
+      const res = await fetch(AI_ENDPOINT, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        const txt = await res.text().catch(() => "");
+        throw new Error(`Error ${res.status}: ${txt || "No se pudo obtener respuesta."}`);
+      }
+
+      const data = await res.json();
+      return data.reply || data.response || data.message || "No recibí respuesta del servicio.";
+    }
+
+    async function handleSend(raw, source = "text"){
+      const text = (raw || "").trim();
+      if (!text) return;
+
+      addMessage("user", text);
+      setTyping(true);
+
+      try{
+        const reply = await askAI(text, source);
+        setTyping(false);
+        addMessage("assistant", reply);
+
+        if (ttsToggle.checked || source === "voice") {
+          speak(reply);
+        }
+      }catch(err){
+        setTyping(false);
+        addMessage("assistant", "Ocurrió un error al consultar la IA. Revisa la configuración del endpoint.");
+        console.error(err);
+      }
+    }
+
+    sendBtn.addEventListener("click", () => {
+      handleSend(userInput.value, "text");
+      userInput.value = "";
+    });
+
+    userInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        sendBtn.click();
+      }
+    });
+
+    // ==========================
+    // Voz: reconocimiento (entrada)
+    // ==========================
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition = null;
+
+    if (SpeechRecognition){
+      recognition = new SpeechRecognition();
+      recognition.lang = "es-MX";
+      recognition.interimResults = true;
+      recognition.continuous = false;
+
+      let finalText = "";
+
+      recognition.onstart = () => {
+        isListening = true;
+        micBtn.classList.add("listening");
+        micBtn.textContent = "⏹ Detener";
+        voiceStatus.textContent = "Escuchando… habla ahora.";
+        finalText = "";
+      };
+
+      recognition.onresult = (event) => {
+        let interim = "";
+        for (let i = event.resultIndex; i < event.results.length; i++){
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalText += transcript + " ";
+          } else {
+            interim += transcript;
+          }
+        }
+        voiceStatus.textContent = interim
+          ? `Transcribiendo: "${interim}"`
+          : (finalText ? `Detectado: "${finalText.trim()}"` : "Escuchando…");
+      };
+
+      recognition.onerror = (event) => {
+        console.warn("SpeechRecognition error:", event.error);
+        voiceStatus.textContent = "No se pudo usar el micrófono. Verifica permisos del navegador.";
+      };
+
+      recognition.onend = async () => {
+        isListening = false;
+        micBtn.classList.remove("listening");
+        micBtn.textContent = "🎤 Hablar";
+
+        const text = finalText.trim();
+        if (text) {
+          voiceStatus.textContent = `Enviado: "${text}"`;
+          await handleSend(text, "voice");
+        } else {
+          voiceStatus.textContent = "No detecté voz. Intenta de nuevo.";
+        }
+      };
+
+      micBtn.addEventListener("click", () => {
+        if (!isListening) {
+          recognition.start();
+        } else {
+          recognition.stop();
+        }
+      });
+    } else {
+      micBtn.disabled = true;
+      voiceStatus.textContent = "Tu navegador no soporta reconocimiento de voz.";
+    }
+
+    // ==========================
+    // Voz: síntesis (salida)
+    // ==========================
+    function getSpanishVoice(){
+      const voices = speechSynthesis.getVoices?.() || [];
+      return (
+        voices.find(v => /^es(-|_)?MX$/i.test(v.lang)) ||
+        voices.find(v => /^es/i.test(v.lang)) ||
+        null
+      );
+    }
+
+    function speak(text){
+      if (!("speechSynthesis" in window) || !text) return;
+
+      try{
+        window.speechSynthesis.cancel();
+
+        const u = new SpeechSynthesisUtterance(text);
+        const voice = getSpanishVoice();
+        if (voice) u.voice = voice;
+        u.lang = voice?.lang || "es-MX";
+        u.rate = 1;
+        u.pitch = 1;
+
+        aniaWidget.classList.add("speaking");
+        u.onend = () => aniaWidget.classList.remove("speaking");
+        u.onerror = () => aniaWidget.classList.remove("speaking");
+
+        window.speechSynthesis.speak(u);
+      }catch(err){
+        aniaWidget.classList.remove("speaking");
+        console.warn("speechSynthesis error:", err);
+      }
+    }
+
+    // Cargar voces (algunos navegadores las cargan async)
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.onvoiceschanged = () => {};
+    }
+
+    // Mensaje inicial
+    addMessage("assistant", "¡Hola! Soy Ania 👋 ¿En qué te ayudo hoy?");
+  </script>
+</body>
+</html>
