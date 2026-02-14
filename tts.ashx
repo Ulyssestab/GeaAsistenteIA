@@ -1,230 +1,356 @@
 <%@ WebHandler Language="C#" Class="TtsProxy" %>
 
 using System;
-using System.Collections.Generic;
-using System.Configuration;
 using System.IO;
 using System.Net;
 using System.Text;
 using System.Web;
+using System.Configuration;
+using System.Collections.Generic;
 using System.Web.Script.Serialization;
+using System.Security;
 
 public class TtsProxy : IHttpHandler
 {
+    private static readonly JavaScriptSerializer Js = new JavaScriptSerializer();
+
     public void ProcessRequest(HttpContext context)
     {
-        // ✅ GET para prueba rápida en navegador
-        if (context.Request.HttpMethod == "GET")
+        // TLS 1.2
+        try { ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072; } catch { }
+
+        ApplyCors(context);
+
+        // Preflight CORS
+        if (context.Request.HttpMethod.Equals("OPTIONS", StringComparison.OrdinalIgnoreCase))
+        {
+            context.Response.StatusCode = 204;
+            context.Response.SuppressContent = true;
+            return;
+        }
+
+        if (context.Request.HttpMethod.Equals("GET", StringComparison.OrdinalIgnoreCase))
         {
             context.Response.ContentType = "text/plain; charset=utf-8";
-            context.Response.Write("OK - TTS proxy activo. Usa POST JSON.");
+            context.Response.ContentEncoding = Encoding.UTF8;
+            context.Response.Write("OK - TTS proxy activo. Usa POST.");
             return;
         }
 
-        // ✅ Solo POST
-        if (context.Request.HttpMethod != "POST")
+        if (!context.Request.HttpMethod.Equals("POST", StringComparison.OrdinalIgnoreCase))
         {
-            context.Response.StatusCode = 405;
-            context.Response.End();
-            return;
-        }
-
-        // ✅ TLS 1.2 (útil en servidores viejos)
-        try
-        {
-            ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072; // TLS 1.2
-        }
-        catch { }
-
-        // Leer JSON
-        string body;
-        using (var reader = new StreamReader(context.Request.InputStream, context.Request.ContentEncoding))
-            body = reader.ReadToEnd();
-
-        Dictionary<string, object> req;
-        try
-        {
-            req = new JavaScriptSerializer().Deserialize<Dictionary<string, object>>(body);
-        }
-        catch
-        {
-            WriteJsonError(context, 400, "Invalid JSON", "El body debe ser JSON válido.");
-            return;
-        }
-
-        string text = GetStr(req, "text");
-        string provider = (GetStr(req, "provider") ?? "").Trim().ToLowerInvariant();
-        string lang = (GetStr(req, "lang") ?? "es-MX").Trim();
-        string voice = (GetStr(req, "voice") ?? "").Trim();
-
-        if (string.IsNullOrWhiteSpace(text))
-        {
-            WriteJsonError(context, 400, "Missing text", "Falta el campo 'text'.");
-            return;
-        }
-
-        // Limitar tamaño para evitar abuso
-        if (text.Length > 4000) text = text.Substring(0, 4000);
-
-        if (string.IsNullOrWhiteSpace(provider))
-            provider = (ConfigurationManager.AppSettings["TtsDefaultProvider"] ?? "azure").Trim().ToLowerInvariant();
-
-        // "browser" se maneja en el cliente (speechSynthesis)
-        if (provider == "browser")
-        {
-            WriteJsonError(context, 400, "Provider browser", "El proveedor 'browser' se ejecuta en el cliente. Usa 'azure' o 'elevenlabs'.");
-            return;
-        }
-
-        try
-        {
-            if (provider == "azure")
+            WriteJson(context, 405, new
             {
-                ProxyAzure(context, text, lang, voice);
+                error = "Method Not Allowed",
+                detail = "Use POST."
+            });
+            return;
+        }
+
+        try
+        {
+            bool isLocal = IsLocalRequest(context);
+
+            string body = ReadBody(context.Request);
+            var payload = ParseJsonToDict(body);
+
+            string text = GetString(payload, "text");
+            string provider = (GetString(payload, "provider") ?? "").Trim().ToLowerInvariant();
+            string lang = GetString(payload, "lang");
+            string azureVoiceFromBody = GetString(payload, "azureVoice");
+            string elevenVoiceFromBody = GetString(payload, "elevenVoiceId");
+
+            // Permite provider por querystring también
+            if (string.IsNullOrWhiteSpace(provider))
+                provider = (context.Request["provider"] ?? "").Trim().ToLowerInvariant();
+
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                WriteJson(context, 400, new { error = "Texto vacío", detail = "Envia { text: \"...\" }" });
                 return;
             }
 
-            if (provider == "elevenlabs")
-            {
-                ProxyElevenLabs(context, text, lang, voice);
-                return;
-            }
+            if (string.IsNullOrWhiteSpace(provider))
+                provider = "azure"; // default server-side (puedes cambiarlo)
 
-            WriteJsonError(context, 400, "Unknown provider", "Provider soportados: azure | elevenlabs | browser.");
+            byte[] audioBytes;
+
+            switch (provider)
+            {
+                case "azure":
+                    {
+                        string key = GetSetting(isLocal ? "AzureSpeechKey.Local" : "AzureSpeechKey.Prod");
+                        string region = GetSetting(isLocal ? "AzureSpeechRegion.Local" : "AzureSpeechRegion.Prod");
+                        string defaultVoice = GetSetting(isLocal ? "AzureVoice.Local" : "AzureVoice.Prod");
+                        string voice = !string.IsNullOrWhiteSpace(azureVoiceFromBody) ? azureVoiceFromBody :
+                                       (!string.IsNullOrWhiteSpace(defaultVoice) ? defaultVoice : "es-MX-DaliaNeural");
+
+                        if (string.IsNullOrWhiteSpace(key) || string.IsNullOrWhiteSpace(region))
+                        {
+                            WriteJson(context, 500, new
+                            {
+                                error = "Configuración faltante Azure",
+                                detail = "Faltan AzureSpeechKey.* y/o AzureSpeechRegion.*"
+                            });
+                            return;
+                        }
+
+                        audioBytes = SynthesizeWithAzure(text, key, region, voice, string.IsNullOrWhiteSpace(lang) ? "es-MX" : lang);
+                        WriteAudio(context, audioBytes, "audio/mpeg");
+                        return;
+                    }
+
+                case "elevenlabs":
+                case "eleven":
+                    {
+                        string apiKey = GetSetting(isLocal ? "ElevenLabsApiKey.Local" : "ElevenLabsApiKey.Prod");
+                        string defaultVoiceId = GetSetting(isLocal ? "ElevenVoiceId.Local" : "ElevenVoiceId.Prod");
+                        string modelId = GetSetting(isLocal ? "ElevenModelId.Local" : "ElevenModelId.Prod");
+                        if (string.IsNullOrWhiteSpace(modelId)) modelId = "eleven_multilingual_v2";
+
+                        string voiceId = !string.IsNullOrWhiteSpace(elevenVoiceFromBody) ? elevenVoiceFromBody : defaultVoiceId;
+
+                        if (string.IsNullOrWhiteSpace(apiKey) || string.IsNullOrWhiteSpace(voiceId))
+                        {
+                            WriteJson(context, 500, new
+                            {
+                                error = "Configuración faltante ElevenLabs",
+                                detail = "Faltan ElevenLabsApiKey.* y/o ElevenVoiceId.*"
+                            });
+                            return;
+                        }
+
+                        audioBytes = SynthesizeWithElevenLabs(text, apiKey, voiceId, modelId);
+                        WriteAudio(context, audioBytes, "audio/mpeg");
+                        return;
+                    }
+
+                case "browser":
+                    // Normalmente el browser TTS no pega a este endpoint.
+                    WriteJson(context, 200, new
+                    {
+                        ok = true,
+                        provider = "browser",
+                        detail = "Para browser TTS el audio se genera en el cliente."
+                    });
+                    return;
+
+                default:
+                    WriteJson(context, 400, new
+                    {
+                        error = "Proveedor no soportado",
+                        detail = "Usa provider: azure | elevenlabs | browser"
+                    });
+                    return;
+            }
         }
-        catch (WebException wex)
+        catch (WebException ex)
         {
-            string upstream = ReadWebExceptionBody(wex);
-            WriteJsonError(context, 502, "Upstream error", wex.Message + (string.IsNullOrWhiteSpace(upstream) ? "" : " | " + upstream));
+            string detail = ReadWebException(ex);
+            WriteJson(context, 502, new { error = "Error llamando proveedor TTS", detail = detail });
         }
         catch (Exception ex)
         {
-            WriteJsonError(context, 500, "Server error", ex.Message);
+            WriteJson(context, 500, new { error = "Error interno", detail = ex.Message });
         }
     }
 
-    // ---------------------------
-    // Azure Speech TTS (REST)
-    // ---------------------------
-    private static void ProxyAzure(HttpContext context, string text, string lang, string voiceOverride)
+    public bool IsReusable { get { return true; } }
+
+    // ----------------- TTS Providers -----------------
+
+    private static byte[] SynthesizeWithAzure(string text, string key, string region, string voice, string lang)
     {
-        string region = (ConfigurationManager.AppSettings["AzureSpeechRegion"] ?? "").Trim();
-        string key = (ConfigurationManager.AppSettings["AzureSpeechKey"] ?? "").Trim();
-        string voice = !string.IsNullOrWhiteSpace(voiceOverride)
-            ? voiceOverride
-            : (ConfigurationManager.AppSettings["AzureVoice"] ?? "es-MX-DaliaNeural").Trim();
-
-        if (string.IsNullOrWhiteSpace(region) || string.IsNullOrWhiteSpace(key))
-            throw new Exception("AzureSpeechRegion/AzureSpeechKey no configurados en web.config.");
-
         string url = "https://" + region + ".tts.speech.microsoft.com/cognitiveservices/v1";
 
-        // SSML mínimo
-        string ssml =
-            "<speak version='1.0' xml:lang='" + HttpUtility.HtmlAttributeEncode(lang) + "'>" +
-            "<voice xml:lang='" + HttpUtility.HtmlAttributeEncode(lang) + "' name='" + HttpUtility.HtmlAttributeEncode(voice) + "'>" +
-            HttpUtility.HtmlEncode(text) +
-            "</voice></speak>";
+        string safeText = SecurityElement.Escape(text) ?? "";
+        string safeLang = SecurityElement.Escape(lang) ?? "es-MX";
+        string safeVoice = SecurityElement.Escape(voice) ?? "es-MX-DaliaNeural";
 
-        HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
+        string ssml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+                    + "<speak version=\"1.0\" xml:lang=\"" + safeLang + "\">"
+                    +   "<voice xml:lang=\"" + safeLang + "\" name=\"" + safeVoice + "\">"
+                    +      safeText
+                    +   "</voice>"
+                    + "</speak>";
+
+        var req = (HttpWebRequest)WebRequest.Create(url);
         req.Method = "POST";
-        req.ContentType = "application/ssml+xml; charset=utf-8";
-        req.Accept = "audio/mpeg";
+        req.ContentType = "application/ssml+xml";
         req.Headers["Ocp-Apim-Subscription-Key"] = key;
+        req.Headers["X-Microsoft-OutputFormat"] = "audio-24khz-48kbitrate-mono-mp3";
+        req.UserAgent = "GeaAsistenteHub-TTS";   // <-- CORRECTO
+        req.Timeout = 60000;
 
-        // MP3 mono 16khz (balance calidad/peso)
-        req.Headers["X-Microsoft-OutputFormat"] = "audio-16khz-32kbitrate-mono-mp3";
-
-        using (var sw = new StreamWriter(req.GetRequestStream(), Encoding.UTF8))
-            sw.Write(ssml);
+        byte[] bytes = Encoding.UTF8.GetBytes(ssml);
+        using (var rs = req.GetRequestStream())
+            rs.Write(bytes, 0, bytes.Length);
 
         using (var resp = (HttpWebResponse)req.GetResponse())
-        using (var rs = resp.GetResponseStream())
-        {
-            context.Response.StatusCode = (int)resp.StatusCode;
-            context.Response.ContentType = "audio/mpeg";
-            rs.CopyTo(context.Response.OutputStream);
-        }
+        using (var stream = resp.GetResponseStream())
+            return ReadAllBytes(stream);
     }
 
-    // ---------------------------
-    // ElevenLabs TTS (REST)
-    // ---------------------------
-    private static void ProxyElevenLabs(HttpContext context, string text, string lang, string voiceOverride)
+    private static byte[] SynthesizeWithElevenLabs(string text, string apiKey, string voiceId, string modelId)
     {
-        string apiKey = (ConfigurationManager.AppSettings["ElevenLabsApiKey"] ?? "").Trim();
-        string voiceId = !string.IsNullOrWhiteSpace(voiceOverride)
-            ? voiceOverride
-            : (ConfigurationManager.AppSettings["ElevenLabsVoiceId"] ?? "").Trim();
+        // Puedes ajustar output_format si quieres otro bitrate
+        string url = "https://api.elevenlabs.io/v1/text-to-speech/" + HttpUtility.UrlEncode(voiceId) + "?output_format=mp3_44100_128";
 
-        if (string.IsNullOrWhiteSpace(apiKey) || string.IsNullOrWhiteSpace(voiceId))
-            throw new Exception("ElevenLabsApiKey/ElevenLabsVoiceId no configurados en web.config.");
-
-        // Puedes ajustar output_format según tu gusto (mp3_44100_128 es buena calidad/peso)
-        string url = "https://api.elevenlabs.io/v1/text-to-speech/" + Uri.EscapeDataString(voiceId) + "?output_format=mp3_44100_128";
-
-        // Modelo recomendado multilenguaje
         var payload = new Dictionary<string, object>
         {
             { "text", text },
-            { "model_id", (ConfigurationManager.AppSettings["ElevenLabsModelId"] ?? "eleven_multilingual_v2").Trim() }
+            { "model_id", modelId },
+            { "voice_settings", new Dictionary<string, object>
+                {
+                    { "stability", 0.50 },
+                    { "similarity_boost", 0.75 }
+                }
+            }
         };
 
-        string json = new JavaScriptSerializer().Serialize(payload);
+        string json = Js.Serialize(payload);
 
-        HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
+        var req = (HttpWebRequest)WebRequest.Create(url);
         req.Method = "POST";
         req.ContentType = "application/json; charset=utf-8";
         req.Accept = "audio/mpeg";
         req.Headers["xi-api-key"] = apiKey;
+        req.Timeout = 60000;
 
-        using (var sw = new StreamWriter(req.GetRequestStream(), Encoding.UTF8))
-            sw.Write(json);
+        byte[] data = Encoding.UTF8.GetBytes(json);
+        using (var rs = req.GetRequestStream())
+            rs.Write(data, 0, data.Length);
 
         using (var resp = (HttpWebResponse)req.GetResponse())
-        using (var rs = resp.GetResponseStream())
+        using (var stream = resp.GetResponseStream())
+            return ReadAllBytes(stream);
+    }
+
+    // ----------------- CORS -----------------
+
+    private static void ApplyCors(HttpContext context)
+    {
+        string origin = context.Request.Headers["Origin"];
+        if (string.IsNullOrWhiteSpace(origin)) return;
+
+        // Lista desde config: "http://localhost:8084,https://desarrolloweb.aguascalientes.gob.mx"
+        string configured = GetSetting("CorsAllowedOrigins");
+        var allowed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        if (!string.IsNullOrWhiteSpace(configured))
         {
-            context.Response.StatusCode = (int)resp.StatusCode;
-            context.Response.ContentType = "audio/mpeg";
-            rs.CopyTo(context.Response.OutputStream);
+            string[] parts = configured.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+            for (int i = 0; i < parts.Length; i++)
+                allowed.Add(parts[i].Trim());
         }
+
+        // Defaults útiles para local/prod
+        allowed.Add("http://localhost");
+        allowed.Add("http://localhost:8084");
+        allowed.Add("http://127.0.0.1");
+        allowed.Add("http://127.0.0.1:8084");
+        allowed.Add("https://desarrolloweb.aguascalientes.gob.mx");
+
+        if (!allowed.Contains(origin)) return;
+
+        context.Response.Headers["Access-Control-Allow-Origin"] = origin;
+        context.Response.Headers["Vary"] = "Origin";
+        context.Response.Headers["Access-Control-Allow-Credentials"] = "true";
+        context.Response.Headers["Access-Control-Allow-Methods"] = "GET,POST,OPTIONS";
+        context.Response.Headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With, X-Api-Key";
+        context.Response.Headers["Access-Control-Max-Age"] = "86400";
     }
 
-    // ---------------------------
-    // Helpers
-    // ---------------------------
-    private static string GetStr(Dictionary<string, object> d, string key)
+    // ----------------- Helpers -----------------
+
+    private static bool IsLocalRequest(HttpContext context)
     {
-        if (d == null || string.IsNullOrWhiteSpace(key)) return null;
-        object v;
-        if (!d.TryGetValue(key, out v) || v == null) return null;
-        return v.ToString();
+        if (context.Request.IsLocal) return true;
+        string host = (context.Request.Url != null ? context.Request.Url.Host : "") ?? "";
+        return host.Equals("localhost", StringComparison.OrdinalIgnoreCase)
+            || host.StartsWith("127.", StringComparison.OrdinalIgnoreCase);
     }
 
-    private static void WriteJsonError(HttpContext context, int status, string error, string detail)
+    private static string GetSetting(string key)
     {
-        context.Response.StatusCode = status;
-        context.Response.ContentType = "application/json; charset=utf-8";
-
-        string safeError = (error ?? "").Replace("\"", "\\\"");
-        string safeDetail = (detail ?? "").Replace("\"", "\\\"");
-
-        context.Response.Write("{\"error\":\"" + safeError + "\",\"detail\":\"" + safeDetail + "\"}");
+        return ConfigurationManager.AppSettings[key] ?? "";
     }
 
-    private static string ReadWebExceptionBody(WebException wex)
+    private static string ReadBody(HttpRequest request)
     {
+        request.InputStream.Position = 0;
+        using (var sr = new StreamReader(request.InputStream, request.ContentEncoding ?? Encoding.UTF8))
+            return sr.ReadToEnd();
+    }
+
+    private static Dictionary<string, object> ParseJsonToDict(string body)
+    {
+        if (string.IsNullOrWhiteSpace(body))
+            return new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+
         try
         {
-            var resp = wex.Response as HttpWebResponse;
-            if (resp == null) return null;
-
-            using (var s = resp.GetResponseStream())
-            using (var sr = new StreamReader(s))
-                return sr.ReadToEnd();
+            var dict = Js.Deserialize<Dictionary<string, object>>(body);
+            return dict ?? new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
         }
-        catch { return null; }
+        catch
+        {
+            return new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+        }
     }
 
-    public bool IsReusable { get { return true; } }
+    private static string GetString(Dictionary<string, object> dict, string key)
+    {
+        if (dict == null || string.IsNullOrWhiteSpace(key)) return "";
+        object val;
+        if (!dict.TryGetValue(key, out val) || val == null) return "";
+        return Convert.ToString(val) ?? "";
+    }
+
+    private static byte[] ReadAllBytes(Stream stream)
+    {
+        if (stream == null) return new byte[0];
+        using (var ms = new MemoryStream())
+        {
+            stream.CopyTo(ms);
+            return ms.ToArray();
+        }
+    }
+
+    private static string ReadWebException(WebException ex)
+    {
+        if (ex == null) return "WebException desconocida.";
+        if (ex.Response == null) return ex.Message;
+
+        try
+        {
+            using (var rs = ex.Response.GetResponseStream())
+            using (var sr = new StreamReader(rs))
+                return sr.ReadToEnd();
+        }
+        catch
+        {
+            return ex.Message;
+        }
+    }
+
+    private static void WriteAudio(HttpContext context, byte[] audioBytes, string mimeType)
+    {
+        if (audioBytes == null) audioBytes = new byte[0];
+
+        context.Response.Clear();
+        context.Response.StatusCode = 200;
+        context.Response.ContentType = string.IsNullOrWhiteSpace(mimeType) ? "audio/mpeg" : mimeType;
+        context.Response.BinaryWrite(audioBytes);
+        context.Response.Flush();
+    }
+
+    private static void WriteJson(HttpContext context, int statusCode, object payload)
+    {
+        context.Response.StatusCode = statusCode;
+        context.Response.ContentType = "application/json; charset=utf-8";
+        context.Response.ContentEncoding = Encoding.UTF8;
+        context.Response.Write(Js.Serialize(payload));
+    }
 }
+
