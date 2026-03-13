@@ -11,29 +11,29 @@
     html,body{height:100%;margin:0;overflow:hidden}
     body{font-family:"Segoe UI",Tahoma,Geneva,Verdana,sans-serif;background:radial-gradient(circle at top left,rgba(196,154,82,.16),transparent 28%),linear-gradient(135deg,#f8f4f0,#efe5db 48%,#f8f4f0);color:var(--gea-ink)}
     .page-shell{min-height:100dvh;padding:1rem}
-    .app{display:grid;grid-template-columns:minmax(360px,.95fr) minmax(460px,1.15fr);width:min(1480px,100%);min-height:calc(100dvh - 2rem);max-height:calc(100dvh - 2rem);margin:0 auto;overflow:hidden;border:1px solid rgba(45,55,122,.12);border-radius:28px;background:rgba(255,255,255,.84);box-shadow:0 28px 60px rgba(53,36,26,.16);backdrop-filter:blur(12px)}
-    .side{position:relative;display:flex;flex-direction:column;justify-content:space-between;min-height:0;padding:2rem 2rem 0;overflow:hidden;background:#2D377A;color:#fff}
-    .side::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 15% 18%,rgba(255,255,255,.15),transparent 26%),linear-gradient(155deg,rgba(196,154,82,.18),transparent 45%)}
+    .app{display:grid;grid-template-columns:minmax(420px,.96fr) minmax(520px,1.12fr);width:min(1540px,100%);min-height:calc(100dvh - 2rem);max-height:calc(100dvh - 2rem);margin:0 auto;overflow:hidden;border:1px solid rgba(45,55,122,.12);border-radius:28px;background:rgba(255,255,255,.84);box-shadow:0 28px 60px rgba(53,36,26,.16);backdrop-filter:blur(12px)}
+    .side{position:relative;display:flex;flex-direction:column;justify-content:space-between;min-height:0;padding:1.35rem 1.35rem 0;overflow:hidden;background:#2D377A;color:#fff}
+    .side::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 15% 18%,rgba(255,255,255,.12),transparent 24%),linear-gradient(155deg,rgba(196,154,82,.18),transparent 45%)}
     .side-copy,.avatar-stage{position:relative;z-index:1}
-    .gov-mark{display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem}
+    .gov-mark{display:flex;align-items:center;gap:1rem;margin-bottom:1rem}.side-copy--minimal{display:flex;justify-content:flex-start;align-items:flex-start}.gov-mark--solo{padding:.8rem 1rem;border-radius:22px;border:1px solid rgba(255,255,255,.14);background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.06));backdrop-filter:blur(8px)}
     .gov-mark img,.header-logo{object-fit:contain}
-    .gov-mark img{width:78px;filter:drop-shadow(0 12px 18px rgba(0,0,0,.14))}
+    .gov-mark img{width:74px;max-width:100%;filter:drop-shadow(0 12px 18px rgba(0,0,0,.14))}
     .gov-overline{display:block;margin-bottom:.35rem;font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.75)}
-    .gov-mark h1{margin:0;font-size:1.35rem;line-height:1.2;font-weight:700}
-    .hero-card{padding:1.35rem 1.4rem;margin-bottom:1.2rem;border:1px solid rgba(255,255,255,.16);border-radius:24px;background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.06))}
-    .hero-badge{display:inline-flex;padding:.38rem .8rem;border-radius:999px;background:rgba(255,255,255,.14);font-size:.74rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#fff8ec}
-    .hero-card h2{margin:1rem 0 .75rem;font-size:2.05rem;line-height:1.06;font-weight:700}
+    .gov-mark h1{margin:0;font-size:1.2rem;line-height:1.15;font-weight:700}
+    .hero-card{display:none}
+    .hero-badge{display:none}
+    .hero-card h2{display:none}
     .hero-card p,.service-item span{margin:0;color:rgba(255,255,255,.82);line-height:1.6}
-    .service-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem}
-    .service-item{padding:1rem;border-radius:18px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.08)}
+    .service-grid{display:none}
+    .service-item{display:none}
     .service-item strong{display:block;margin-bottom:.25rem;font-size:.95rem}
-    .avatar-stage{position:relative;display:flex;align-items:flex-end;justify-content:center;min-height:390px;padding:0 1rem}
-    .avatar-stage::before{content:"";position:absolute;inset:4% 0 8%;background:url("assets/img/fondo.png") center 52%/contain no-repeat;opacity:.95;filter:drop-shadow(0 18px 34px rgba(0,0,0,.24))}
+    .avatar-stage{position:relative;display:flex;align-items:flex-end;justify-content:center;flex:1 1 auto;min-height:460px;padding:0 .75rem .25rem}
+    .avatar-stage::before{content:"";position:absolute;inset:2% 0 4%;background-image:var(--ania-stage-bg, url("assets/img/fondo.png"));background-position:center 52%;background-size:contain;background-repeat:no-repeat;opacity:.98;filter:drop-shadow(0 18px 34px rgba(0,0,0,.24))}
     .avatar-stage::after{content:"";position:absolute;left:10%;right:10%;bottom:0;height:110px;background:radial-gradient(circle,rgba(0,0,0,.34),rgba(0,0,0,0) 70%);opacity:.45;filter:blur(8px)}
-    .side img#sideAvatar{position:relative;z-index:1;width:min(100%,620px);height:100%;object-fit:contain;object-position:center bottom;filter:drop-shadow(0 18px 30px rgba(0,0,0,.22));animation:floaty 3.4s ease-in-out infinite}
+    .side img#sideAvatar{position:relative;z-index:1;width:min(100%,640px);max-height:100%;height:auto;object-fit:contain;object-position:center bottom;filter:drop-shadow(0 18px 30px rgba(0,0,0,.22));animation:floaty 3.4s ease-in-out infinite}
     @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
     .chatcol{display:grid;grid-template-rows:auto auto 1fr auto auto;min-width:0;min-height:0;overflow:hidden;background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(250,247,244,.95))}
-    .header{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1.2rem 1.5rem;border-bottom:1px solid rgba(45,55,122,.1);background:linear-gradient(180deg,#fff,rgba(249,246,243,.98))}
+    .header{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1.1rem 1.35rem;border-bottom:1px solid rgba(45,55,122,.1);background:linear-gradient(180deg,#fff,rgba(249,246,243,.98))}
     .header-brand{display:flex;align-items:center;gap:1rem;min-width:0}
     .header-logo{width:62px;height:62px;padding:.75rem;border-radius:20px;background:linear-gradient(180deg,#fff,#f3ece6);border:1px solid rgba(45,55,122,.08);box-shadow:0 12px 24px rgba(41,25,19,.08)}
     .header-meta small{display:block;margin-bottom:.15rem;color:var(--gea-primary);font-weight:700;letter-spacing:.08em;text-transform:uppercase}
@@ -44,11 +44,11 @@
     .actions{display:flex;gap:.65rem;flex:0 0 auto}
     .btn{display:inline-flex;align-items:center;justify-content:center}
     .actions .btn{width:42px;height:42px;padding:0;border-radius:14px;border:1px solid rgba(45,55,122,.14);background:#fff;color:var(--gea-primary);font-size:1.2rem;font-weight:700;box-shadow:0 6px 14px rgba(41,25,19,.06)}
-    .tabs{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1rem 1.5rem;border-bottom:1px solid var(--gea-line);background:rgba(255,255,255,.74)}
+    .tabs{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.85rem 1.35rem;border-bottom:1px solid var(--gea-line);background:rgba(255,255,255,.74)}
     .tabs-copy strong{display:block;font-size:.98rem}
     .tabs-copy span,.voice-note,.typing,.settings{color:var(--gea-muted)}
-    .tab-actions{display:flex;gap:.65rem;flex-wrap:wrap}
-    .tab{min-width:118px;height:42px;padding:0 1.1rem;border-radius:999px;border:1px solid rgba(45,55,122,.14);background:#fff;color:var(--gea-primary);font-weight:700}
+    .tab-actions{display:flex;gap:.65rem;flex-wrap:nowrap;flex:0 0 auto}
+    .tab{min-width:132px;height:44px;padding:0 1.15rem;border-radius:999px;border:1px solid rgba(45,55,122,.14);background:#fff;color:var(--gea-primary);font-weight:700;flex:0 0 auto}
     .tab.active{background:linear-gradient(180deg,var(--gea-primary),var(--gea-primary-dark));border-color:transparent;color:#fff;box-shadow:0 10px 20px rgba(45,55,122,.22)}
     .messages{padding:1.35rem 1.5rem;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-gutter:stable both-edges;background:linear-gradient(180deg,rgba(255,255,255,.35),rgba(255,255,255,0)),radial-gradient(circle at top right,rgba(196,154,82,.08),transparent 22%),#fcfbf9}
     .bubble{max-width:88%;padding:1rem 1.05rem;margin:.75rem 0;border-radius:20px;border:1px solid transparent;box-shadow:0 12px 24px rgba(38,28,20,.06);line-height:1.55;font-size:.96rem;overflow-wrap:anywhere}
@@ -73,33 +73,22 @@
     .settings{display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:.95rem 1.5rem 1.1rem;border-top:1px solid var(--gea-line);font-size:.88rem;background:linear-gradient(180deg,rgba(247,241,236,.95),rgba(244,238,232,.98))}
     .settings label{display:flex;align-items:center;gap:.6rem;color:var(--gea-ink);font-weight:600}
     .settings input[type="checkbox"]{width:1.05rem;height:1.05rem;accent-color:var(--gea-primary)}
-    @media (max-width:1199px){.hero-card h2{font-size:1.85rem}.service-grid{grid-template-columns:1fr}}
-    @media (max-width:991px){html,body,body{overflow:auto}.page-shell{padding:.75rem}.app{grid-template-columns:1fr;grid-template-rows:minmax(360px,44vh) 1fr;min-height:calc(100dvh - 1.5rem);max-height:none;border-radius:24px}.side{padding:1.5rem 1.25rem 0}.avatar-stage{min-height:280px}.header,.tabs,.messages,.typing,.controls,.settings{padding-left:1rem;padding-right:1rem}}
-    @media (max-width:640px){.header{align-items:flex-start}.header-logo{width:54px;height:54px;padding:.6rem}.title{font-size:1.12rem}.subtitle{font-size:.84rem}.tabs{flex-direction:column;align-items:flex-start}.tab-actions{width:100%}.tab{flex:1 1 0}.composer-row,.settings{flex-direction:column;align-items:stretch}.send,.mic{text-align:center;justify-content:center}}
+    @media (max-width:1199px){.app{grid-template-columns:minmax(360px,.9fr) minmax(480px,1.1fr)}}
+    @media (max-width:991px){html,body,body{overflow:auto}.page-shell{padding:.75rem}.app{grid-template-columns:1fr;grid-template-rows:minmax(300px,40vh) 1fr;min-height:calc(100dvh - 1.5rem);max-height:none;border-radius:24px}.side{padding:1rem 1rem 0}.avatar-stage{min-height:260px}.header,.tabs,.messages,.typing,.controls,.settings{padding-left:1rem;padding-right:1rem}.tabs-copy{min-width:0}.tabs-copy span{display:block}}
+    @media (max-width:640px){.header{align-items:flex-start}.header-logo{width:54px;height:54px;padding:.6rem}.title{font-size:1.12rem}.subtitle{font-size:.84rem}.tabs{flex-direction:column;align-items:stretch}.tab-actions{width:100%;justify-content:stretch}.tab{flex:1 1 0;min-width:0}.composer-row,.settings{flex-direction:column;align-items:stretch}.send,.mic{text-align:center;justify-content:center}.gov-mark--solo{width:100%}.gov-mark h1{font-size:1rem}}
   </style>
 </head>
 <body>
   <div class="page-shell container-fluid">
     <div class="app">
       <div class="side">
-        <div class="side-copy">
-          <div class="gov-mark">
-            <img src="assets/img/logo_gob.png" alt="Gobierno del Estado de Aguascalientes"/>
+        <div class="side-copy side-copy--minimal">
+          <div class="gov-mark gov-mark--solo">
+            <img id="logoGobHeader" src="assets/img/logo_gob.png" alt="Gobierno del Estado de Aguascalientes"/>
             <div>
               <span class="gov-overline">Gobierno del Estado de Aguascalientes</span>
-              <h1>Atencion ciudadana digital con imagen institucional</h1>
+              <h1>Asistente virtual oficial</h1>
             </div>
-          </div>
-          <div class="hero-card">
-            <span class="hero-badge">Asistente virtual oficial</span>
-            <h2>Una experiencia mas clara, confiable y cercana para la ciudadania</h2>
-            <p>Ania acompana a las personas con informacion de tramites, citas, costos, estatus y ubicacion de oficinas en una interfaz mas sobria y profesional.</p>
-          </div>
-          <div class="service-grid">
-            <div class="service-item"><strong>Orientacion institucional</strong><span>Mensajes mas limpios, estructura formal y mejor jerarquia visual.</span></div>
-            <div class="service-item"><strong>Atencion multicanal</strong><span>Interaccion por texto o voz desde un mismo espacio de consulta.</span></div>
-            <div class="service-item"><strong>Informacion util</strong><span>Tramites, costos, citas, estatus y ubicaciones en una sola ventana.</span></div>
-            <div class="service-item"><strong>Imagen oficial</strong><span>Paleta sobria, logo institucional y fondo grafico detras del avatar.</span></div>
           </div>
         </div>
         <div class="avatar-stage">
@@ -157,11 +146,48 @@
   <script>
     const p = new URLSearchParams(location.search);
     function pick(...vals){ for (const v of vals){ if (v !== null && v !== undefined && String(v).trim() !== "") return v; } return ""; }
+    function normalizePath(path){ return String(path || "").replace(/\\/g, "/").trim(); }
+    function assetCandidates(path, fallbacks){
+      const seen = new Set();
+      const arr = [];
+      [path].concat(fallbacks || []).forEach(function(item){
+        const raw = normalizePath(item);
+        if (!raw) return;
+        const variants = [raw];
+        if (!/^https?:\/\//i.test(raw) && !raw.startsWith("data:")) {
+          variants.push(raw.replace(/^\.\//, ""));
+          variants.push("./" + raw.replace(/^\.\//, ""));
+          if (!raw.startsWith("assets/")) variants.push("assets/img/" + raw.replace(/^\/+/, ""));
+          if (!raw.startsWith("avatares/") && !raw.startsWith("avatars/")) {
+            variants.push("avatares/ania/" + raw.replace(/^\/+/, ""));
+            variants.push("avatars/ania/" + raw.replace(/^\/+/, ""));
+          }
+          const fname = raw.split("/").pop();
+          if (fname) {
+            variants.push("avatares/ania/" + fname);
+            variants.push("avatars/ania/" + fname);
+            variants.push("assets/img/" + fname);
+          }
+        }
+        variants.forEach(function(v){ if (v && !seen.has(v)) { seen.add(v); arr.push(v); } });
+      });
+      return arr;
+    }
+    function bindSequentialSource(el, sources, fallback){
+      const list = (sources || []).filter(Boolean);
+      let idx = 0;
+      function setNext(){
+        if (idx < list.length){ el.src = list[idx++]; return; }
+        if (fallback){ el.onerror = null; el.src = fallback; }
+      }
+      el.onerror = setNext;
+      setNext();
+    }
     const cfg = {
       title: pick(p.get("title"), "Ania"),
       avatar: pick(p.get("avatar"), ""),
       avatarIdle: pick(p.get("avatarIdle"), p.get("avatar"), ""),
-      avatarListen: pick(p.get("avatarListen"), p.get("avatar"), ""),
+      avatarListen: pick(p.get("avatarListen"), p.get("avatarEscuchando"), p.get("avatar"), ""),
       avatarRead: pick(p.get("avatarRead"), p.get("avatarLeyendo"), p.get("avatarThink"), p.get("avatar"), ""),
       avatarThink: pick(p.get("avatarThink"), p.get("avatarPensando"), p.get("avatarRead"), p.get("avatar"), ""),
       avatarTalk: pick(p.get("avatarTalk"), p.get("avatarHablando"), p.get("avatar"), ""),
@@ -172,11 +198,22 @@
       lang: pick(p.get("lang"), "es-MX"),
       ttsEnabled: (p.get("tts")==="1" || p.get("tts")==="true")
     };
+    const avatarSources = {
+      idle: assetCandidates(cfg.avatarIdle || cfg.avatar, ["avatares/ania/ania_saludando.png", "avatares/ania/Ania.png", "avatars/ania/ania_saludando.png", "assets/img/ania_saludando.png"]),
+      listen: assetCandidates(cfg.avatarListen || cfg.avatarIdle || cfg.avatar, ["avatares/ania/ania_escuchando.png", "avatars/ania/ania_escuchando.png", "assets/img/ania_escuchando.png"]),
+      read: assetCandidates(cfg.avatarRead || cfg.avatarIdle || cfg.avatar, ["avatares/ania/ania_leyendo.png", "avatars/ania/ania_leyendo.png", "assets/img/ania_leyendo.png"]),
+      think: assetCandidates(cfg.avatarThink || cfg.avatarIdle || cfg.avatar, ["avatares/ania/ania_pensando.png", "avatars/ania/ania_pensando.png", "assets/img/ania_pensando.png"]),
+      talk: assetCandidates(cfg.avatarTalk || cfg.avatarIdle || cfg.avatar, ["avatares/ania/ania_hablando.png", "avatars/ania/ania_hablando.png", "assets/img/ania_hablando.png"])
+    };
+    const stageBgSources = assetCandidates(p.get("stageBg"), ["assets/img/fondo.png", "assets/img/fondo.jpg", "./assets/img/fondo.png"]);
+    const logoSources = assetCandidates(p.get("logo"), ["assets/img/logo_gob.png", "assets/img/logo_gob.jpg", "./assets/img/logo_gob.png"]);
     const rawSession = pick(p.get("session"), "");
     const genUuid = () => (window.crypto && typeof crypto.randomUUID === "function") ? crypto.randomUUID() : ("u-" + Date.now() + "-" + Math.random().toString(16).slice(2));
     const sessionId = rawSession ? (rawSession.startsWith("CHAT_") ? rawSession : ("CHAT_" + rawSession)) : ("CHAT_" + genUuid());
     const titleTxt = document.getElementById("titleTxt");
     const sideAvatar = document.getElementById("sideAvatar");
+    const logoGobHeader = document.getElementById("logoGobHeader");
+    const logoGobChat = document.querySelector(".header-logo");
     const messages = document.getElementById("messages");
     const typing = document.getElementById("typing");
     const input = document.getElementById("input");
@@ -191,9 +228,22 @@
     const btnMin = document.getElementById("btnMin");
     titleTxt.textContent = cfg.title;
     document.title = cfg.title + " | Gobierno del Estado de Aguascalientes";
-    sideAvatar.src = cfg.avatarIdle || cfg.avatar;
-    function setAvatarState(state){ const map = { idle: cfg.avatarIdle, listen: cfg.avatarListen, read: cfg.avatarRead, think: cfg.avatarThink, talk: cfg.avatarTalk }; sideAvatar.src = map[state] || cfg.avatarIdle || cfg.avatar; }
-    function setTyping(on){ typing.classList.toggle("show", !!on); if (on) setAvatarState(cfg.avatarRead ? "read" : "think"); else setAvatarState("idle"); }
+    if (stageBgSources.length) document.documentElement.style.setProperty("--ania-stage-bg", 'url("' + stageBgSources[0].replace(/"/g, '\\"') + '")');
+    if (logoGobHeader) bindSequentialSource(logoGobHeader, logoSources);
+    if (logoGobChat) bindSequentialSource(logoGobChat, logoSources);
+    function setAvatarState(state){
+      const map = { idle: avatarSources.idle, listen: avatarSources.listen, read: avatarSources.read, think: avatarSources.think, talk: avatarSources.talk };
+      bindSequentialSource(sideAvatar, map[state] || avatarSources.idle);
+    }
+    (function initStageBg(){
+      if (!stageBgSources.length) return;
+      let idx = 0;
+      const probe = new Image();
+      probe.onload = function(){ document.documentElement.style.setProperty("--ania-stage-bg", 'url("' + stageBgSources[idx].replace(/"/g, '\\"') + '")'); };
+      probe.onerror = function(){ idx += 1; if (idx < stageBgSources.length) probe.src = stageBgSources[idx]; };
+      probe.src = stageBgSources[idx];
+    })();
+    function setTyping(on){ typing.classList.toggle("show", !!on); if (on) setAvatarState(avatarSources.read.length ? "read" : "think"); else setAvatarState("idle"); }
     function normalizeText(s){ return String(s || "").replace(/\\n/g, "\n"); }
     function escapeHtml(s){ return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"); }
     function safeHttpUrl(url){ try{ const u = new URL(url, location.href); if (u.protocol === "http:" || u.protocol === "https:") return u.href; }catch(_){ } return null; }
