@@ -277,6 +277,15 @@
     const livePanel = document.getElementById("livePanel");
     const liveTranscriptStatus = document.getElementById("liveTranscriptStatus");
     const liveTranscriptText = document.getElementById("liveTranscriptText");
+    let currentAudio = null;
+    let currentAudioObjectUrl = "";
+    let currentSpeechUtterance = null;
+    let currentSpeechFinish = null;
+    let speechRunId = 0;
+    let microphoneStream = null;
+    let activeVoiceCallToken = 0;
+    let latestVoiceTurnId = 0;
+    let activeVoiceRequestController = null;
     titleTxt.textContent = cfg.title;
     document.title = cfg.title + " | Gobierno del Estado de Aguascalientes";
     if (stageBgSources.length) document.documentElement.style.setProperty("--ania-stage-bg", 'url("' + stageBgSources[0].replace(/"/g, '\\"') + '")');
@@ -317,15 +326,39 @@
       messages.appendChild(div);
       requestAnimationFrame(() => { messages.scrollTop = messages.scrollHeight; });
     }
+    function wait(ms, signal){
+      return new Promise((resolve, reject) => {
+        const timer = setTimeout(done, ms);
+        function cleanup(){
+          clearTimeout(timer);
+          if (signal) signal.removeEventListener("abort", onAbort);
+        }
+        function done(){
+          cleanup();
+          resolve();
+        }
+        function onAbort(){
+          cleanup();
+          reject(new DOMException("Aborted", "AbortError"));
+        }
+        if (signal) {
+          if (signal.aborted) {
+            onAbort();
+            return;
+          }
+          signal.addEventListener("abort", onAbort, { once:true });
+        }
+      });
+    }
     async function parseApiResponse(res){
       const ct = (res.headers.get("content-type") || "").toLowerCase();
       if (ct.includes("application/json")){ const data = await res.json(); return (data.output || data.answer || data.text || data.message || data.response || data.result || data.data || "").toString().trim(); }
       const txt = (await res.text()).trim(); return txt || "";
     }
-    async function callApi(userText){
-      if (!cfg.apiUrl){ await new Promise(r => setTimeout(r, 350)); return "Recibi tu mensaje: " + userText; }
-      let res = await fetch(cfg.apiUrl, { method: "POST", headers: { "Content-Type":"application/json" }, body: JSON.stringify({ session: sessionId, input: userText }) });
-      if (!res.ok && (res.status === 400 || res.status === 415)){ res = await fetch(cfg.apiUrl, { method: "POST", headers: { "Content-Type":"application/json; charset=utf-8" }, body: JSON.stringify(userText) }); }
+    async function callApi(userText, signal){
+      if (!cfg.apiUrl){ await wait(350, signal); return "Recibi tu mensaje: " + userText; }
+      let res = await fetch(cfg.apiUrl, { method: "POST", headers: { "Content-Type":"application/json" }, body: JSON.stringify({ session: sessionId, input: userText }), signal });
+      if (!res.ok && (res.status === 400 || res.status === 415)){ res = await fetch(cfg.apiUrl, { method: "POST", headers: { "Content-Type":"application/json; charset=utf-8" }, body: JSON.stringify(userText), signal }); }
       if (!res.ok) throw new Error("HTTP " + res.status);
       const out = await parseApiResponse(res); return out || "Listo.";
     }
@@ -334,57 +367,109 @@
       for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
       return new Blob([new Uint8Array(byteNumbers)], { type: mimeType || "audio/mpeg" });
     }
-    function playBlob(blob){
+    function cancelCurrentSpeech(invalidate){
+      if (invalidate !== false) speechRunId += 1;
+      const finish = currentSpeechFinish;
+      currentSpeechFinish = null;
+      const audio = currentAudio;
+      const audioUrl = currentAudioObjectUrl;
+      currentAudio = null;
+      currentAudioObjectUrl = "";
+      currentSpeechUtterance = null;
+      if (audio) {
+        audio.onended = null;
+        audio.onerror = null;
+        try { audio.pause(); } catch {}
+        try { audio.currentTime = 0; } catch {}
+      }
+      if ("speechSynthesis" in window) {
+        try { speechSynthesis.cancel(); } catch {}
+      }
+      if (audioUrl) {
+        try { URL.revokeObjectURL(audioUrl); } catch {}
+      }
+      setAvatarState("idle");
+      if (finish) finish();
+    }
+    function playAudioElement(audio, objectUrl){
       return new Promise((resolve) => {
-        const url = URL.createObjectURL(blob);
-        const audio = new Audio(url);
-        const done = () => { try { URL.revokeObjectURL(url); } catch {} setAvatarState("idle"); resolve(); };
-        audio.onended = done;
-        audio.onerror = done;
-        audio.play().catch(done);
+        let settled = false;
+        const finish = () => {
+          if (settled) return;
+          settled = true;
+          if (currentSpeechFinish === finish) currentSpeechFinish = null;
+          if (currentAudio === audio) currentAudio = null;
+          currentSpeechUtterance = null;
+          if (currentAudioObjectUrl === objectUrl) currentAudioObjectUrl = "";
+          if (objectUrl) {
+            try { URL.revokeObjectURL(objectUrl); } catch {}
+          }
+          setAvatarState("idle");
+          resolve();
+        };
+        currentAudio = audio;
+        currentAudioObjectUrl = objectUrl || "";
+        currentSpeechFinish = finish;
+        audio.onended = finish;
+        audio.onerror = finish;
+        audio.play().catch(finish);
       });
     }
+    function playBlob(blob){
+      const url = URL.createObjectURL(blob);
+      return playAudioElement(new Audio(url), url);
+    }
     function playAudioUrl(url){
-      return new Promise((resolve) => {
-        const audio = new Audio(url);
-        const done = () => { setAvatarState("idle"); resolve(); };
-        audio.onended = done;
-        audio.onerror = done;
-        audio.play().catch(done);
-      });
+      return playAudioElement(new Audio(url), "");
     }
     async function speak(text){
       text = (text || "").trim();
       if (!tts.checked || !text) return;
+      const runId = ++speechRunId;
+      cancelCurrentSpeech(false);
       if (cfg.ttsProvider === "browser" || !cfg.ttsUrl) {
         if (!("speechSynthesis" in window)) return;
         await new Promise((resolve) => {
+          let settled = false;
+          const finish = () => {
+            if (settled) return;
+            settled = true;
+            if (currentSpeechFinish === finish) currentSpeechFinish = null;
+            currentSpeechUtterance = null;
+            setAvatarState("idle");
+            resolve();
+          };
           try{
+            if (runId !== speechRunId) { resolve(); return; }
             setAvatarState("talk");
             const u = new SpeechSynthesisUtterance(text);
             u.lang = cfg.lang || "es-MX";
-            u.onend = () => { setAvatarState("idle"); resolve(); };
-            u.onerror = () => { setAvatarState("idle"); resolve(); };
-            speechSynthesis.cancel();
+            currentSpeechUtterance = u;
+            currentSpeechFinish = finish;
+            u.onend = finish;
+            u.onerror = finish;
             speechSynthesis.speak(u);
           } catch {
-            setAvatarState("idle");
-            resolve();
+            finish();
           }
         });
         return;
       }
       try{
+        if (runId !== speechRunId) return;
         setAvatarState("talk");
         const res = await fetch(cfg.ttsUrl, { method: "POST", headers: { "Content-Type":"application/json" }, body: JSON.stringify({ text, provider: cfg.ttsProvider, voiceProvider: cfg.ttsProvider, lang: cfg.lang || "es-MX", locale: cfg.lang || "es-MX", elevenVoiceId: cfg.elevenVoiceId || undefined, elevenVoice: cfg.elevenVoiceId || undefined }) });
         if (!res.ok) throw new Error("HTTP " + res.status);
+        if (runId !== speechRunId) return;
         const ct = (res.headers.get("content-type") || "").toLowerCase();
         if (ct.includes("application/json")){
           const data = await res.json();
+          if (runId !== speechRunId) return;
           if (data.audioBase64 || data.audio){ await playBlob(b64ToBlob(data.audioBase64 || data.audio, data.mimeType || "audio/mpeg")); return; }
           if (data.url){ await playAudioUrl(data.url); return; }
           setAvatarState("idle"); return;
         }
+        if (runId !== speechRunId) return;
         await playBlob(await res.blob());
       } catch { setAvatarState("idle"); }
     }
@@ -415,6 +500,7 @@
     }
     function startCallVisualState(){
       document.body.classList.add("call-active");
+      activeVoiceCallToken += 1;
       callStartedAt = Date.now();
       updateCallTimer();
       callTimer.classList.add("show");
@@ -427,6 +513,7 @@
     }
     function stopCallVisualState(){
       document.body.classList.remove("call-active");
+      activeVoiceCallToken += 1;
       if (callTimerId) clearInterval(callTimerId);
       callTimerId = null;
       callStartedAt = null;
@@ -451,9 +538,14 @@
     }
     async function ensureMicrophonePermission(){
       if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) throw new Error("Micrófono no disponible");
-      const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
-      stream.getTracks().forEach(t => t.stop());
-      return true;
+      if (microphoneStream && microphoneStream.active) return microphoneStream;
+      microphoneStream = await navigator.mediaDevices.getUserMedia({ audio:{ echoCancellation:true, noiseSuppression:true, autoGainControl:true } });
+      return microphoneStream;
+    }
+    function releaseMicrophoneStream(){
+      if (!microphoneStream) return;
+      microphoneStream.getTracks().forEach(t => t.stop());
+      microphoneStream = null;
     }
     async function beginVoiceCall(){
       callStatus.textContent = "Solicitando acceso al micrófono...";
@@ -484,13 +576,36 @@
       }
       return false;
     }
-    async function sendMessage(){
+    async function sendMessage(source){
+      const origin = source || "text";
       const raw = (input.value || "").trim(); if (!raw) return;
       input.value = ""; addBubble(raw, "me");
       if (handleMenuInput(raw)) return;
+      const isVoiceTurn = origin === "voice";
       const toSend = pendingMenu ? buildRoutedPrompt(pendingMenu, raw) : raw; pendingMenu = null; setTyping(true);
-      try{ const answer = await callApi(toSend); setTyping(false); addBubble(answer, "bot"); const speechText = toSpeechText(answer); if (speechText) speak(speechText); }
-      catch { setTyping(false); addBubble("Ocurrio un error al consultar la informacion. Intenta de nuevo.", "bot"); }
+      const callTokenAtSend = activeVoiceCallToken;
+      const voiceTurnId = isVoiceTurn ? ++latestVoiceTurnId : 0;
+      let controller = null;
+      if (isVoiceTurn) {
+        if (activeVoiceRequestController) activeVoiceRequestController.abort();
+        controller = new AbortController();
+        activeVoiceRequestController = controller;
+      }
+      try{
+        const answer = await callApi(toSend, controller ? controller.signal : undefined);
+        setTyping(false);
+        if (controller && activeVoiceRequestController === controller) activeVoiceRequestController = null;
+        addBubble(answer, "bot");
+        const speechText = toSpeechText(answer);
+        const canSpeakVoiceReply = !isVoiceTurn || (document.body.classList.contains("call-active") && callTokenAtSend === activeVoiceCallToken && voiceTurnId === latestVoiceTurnId);
+        if (speechText && canSpeakVoiceReply) speak(speechText);
+      }
+      catch (err) {
+        setTyping(false);
+        if (controller && activeVoiceRequestController === controller) activeVoiceRequestController = null;
+        if (err && err.name === "AbortError") return;
+        addBubble("Ocurrio un error al consultar la informacion. Intenta de nuevo.", "bot");
+      }
     }
     startCallBtn.addEventListener("click", () => { if (document.body.classList.contains("call-active")) { stopCallVisualState(); addBubble("La llamada por voz ha finalizado. Si lo deseas, puedes iniciar una nueva llamada o continuar por texto.", "bot"); } else { beginVoiceCall(); } });
     switchTextBtn.addEventListener("click", () => { textRow.style.display = "flex"; voiceBox.classList.remove("show"); input.focus(); callSubtitle.textContent = "Atencion por texto disponible. Puedes volver a la llamada cuando quieras."; });
@@ -521,6 +636,14 @@
       let interimBuffer = "";
       let silenceCommitTimer = null;
       let lastDeliveredText = "";
+      let speechStartedAt = 0;
+      let interruptMonitorId = null;
+      let interruptAudioContext = null;
+      let interruptAnalyser = null;
+      let interruptSource = null;
+      let interruptData = null;
+      let interruptFrames = 0;
+      let lastInterruptAt = 0;
       rec.lang = cfg.lang || "es-MX";
       rec.interimResults = true;
       rec.continuous = true;
@@ -528,6 +651,7 @@
       const originalSpeak = speak;
       speak = async function(text){
         isSpeaking = true;
+        speechStartedAt = Date.now();
         restartWanted = callListening && document.body.classList.contains("call-active");
         clearTimeout(silenceCommitTimer);
         try { if (isRecognitionActive) rec.stop(); } catch {}
@@ -536,6 +660,7 @@
           await originalSpeak(text);
         } finally {
           isSpeaking = false;
+          speechStartedAt = 0;
           if (restartWanted && document.body.classList.contains("call-active")) {
             setTimeout(startContinuousRecognition, 450);
           }
@@ -549,6 +674,92 @@
         finalBuffer = "";
         interimBuffer = "";
         clearTimeout(silenceCommitTimer);
+      }
+      function stopInterruptMonitor(){
+        interruptFrames = 0;
+        if (interruptMonitorId) cancelAnimationFrame(interruptMonitorId);
+        interruptMonitorId = null;
+        if (interruptSource) {
+          try { interruptSource.disconnect(); } catch {}
+          interruptSource = null;
+        }
+        if (interruptAnalyser) {
+          try { interruptAnalyser.disconnect(); } catch {}
+          interruptAnalyser = null;
+        }
+        if (interruptAudioContext) {
+          const ctx = interruptAudioContext;
+          interruptAudioContext = null;
+          ctx.close().catch(() => {});
+        }
+        interruptData = null;
+      }
+      function interruptAssistantSpeech(reason){
+        if (!document.body.classList.contains("call-active")) return;
+        if (reason !== "manual" && !isSpeaking) return;
+        cancelCurrentSpeech();
+        if (activeVoiceRequestController) {
+          activeVoiceRequestController.abort();
+          activeVoiceRequestController = null;
+        }
+        isSpeaking = false;
+        speechStartedAt = 0;
+        lastDeliveredText = "";
+        callListening = true;
+        restartWanted = true;
+        clearRecognitionBuffers();
+        callStatus.textContent = "Escuchando";
+        mic.textContent = "Escucha activa";
+        setLiveTranscript("Interrupción detectada", "Te escucho. Continúa con tu nueva pregunta.", true);
+        setTimeout(startContinuousRecognition, 120);
+      }
+      async function startInterruptMonitor(){
+        if (interruptMonitorId) return;
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        try {
+          const stream = await ensureMicrophonePermission();
+          if (!interruptAudioContext) interruptAudioContext = new AudioCtx();
+          if (interruptAudioContext.state === "suspended") {
+            try { await interruptAudioContext.resume(); } catch {}
+          }
+          interruptAnalyser = interruptAudioContext.createAnalyser();
+          interruptAnalyser.fftSize = 1024;
+          interruptAnalyser.smoothingTimeConstant = 0.15;
+          interruptSource = interruptAudioContext.createMediaStreamSource(stream);
+          interruptSource.connect(interruptAnalyser);
+          interruptData = new Uint8Array(interruptAnalyser.fftSize);
+        } catch {
+          stopInterruptMonitor();
+          return;
+        }
+        const tick = () => {
+          if (!interruptAnalyser || !interruptData) {
+            interruptMonitorId = null;
+            return;
+          }
+          interruptMonitorId = requestAnimationFrame(tick);
+          if (!document.body.classList.contains("call-active") || !isSpeaking || !speechStartedAt) {
+            interruptFrames = 0;
+            return;
+          }
+          if ((Date.now() - speechStartedAt) < 650 || (Date.now() - lastInterruptAt) < 1200) return;
+          interruptAnalyser.getByteTimeDomainData(interruptData);
+          let sum = 0;
+          for (let i = 0; i < interruptData.length; i++) {
+            const centered = (interruptData[i] - 128) / 128;
+            sum += centered * centered;
+          }
+          const rms = Math.sqrt(sum / interruptData.length);
+          if (rms > 0.06) interruptFrames += 1;
+          else interruptFrames = Math.max(0, interruptFrames - 1);
+          if (interruptFrames >= 4) {
+            interruptFrames = 0;
+            lastInterruptAt = Date.now();
+            interruptAssistantSpeech("voice");
+          }
+        };
+        interruptMonitorId = requestAnimationFrame(tick);
       }
       function updateLiveTranscript(){
         const combined = normalizeRecognizedText([finalBuffer, interimBuffer].filter(Boolean).join(" "));
@@ -578,7 +789,7 @@
         clearRecognitionBuffers();
         callStatus.textContent = "Procesando tu consulta";
         setLiveTranscript("Consulta detectada", combined, false);
-        await sendMessage();
+        await sendMessage("voice");
       }
       function queueCommit(){
         clearTimeout(silenceCommitTimer);
@@ -604,6 +815,7 @@
         if (document.body.classList.contains("call-active")) {
           callStatus.textContent = "Escuchando";
           mic.textContent = "Escucha activa";
+          startInterruptMonitor();
           showLivePanel();
           updateLiveTranscript();
         } else {
@@ -659,6 +871,7 @@
           callListening = true;
           restartWanted = true;
           mic.textContent = "Escucha activa";
+          startInterruptMonitor();
           setTimeout(startContinuousRecognition, 700);
         }
       };
@@ -666,6 +879,14 @@
       const originalStopCallVisualState = stopCallVisualState;
       stopCallVisualState = function(){
         stopContinuousRecognition();
+        stopInterruptMonitor();
+        cancelCurrentSpeech();
+        lastDeliveredText = "";
+        if (activeVoiceRequestController) {
+          activeVoiceRequestController.abort();
+          activeVoiceRequestController = null;
+        }
+        releaseMicrophoneStream();
         originalStopCallVisualState();
         mic.textContent = "Reactivar escucha";
       };
@@ -673,6 +894,10 @@
       mic.addEventListener("click", async () => {
         if (!document.body.classList.contains("call-active")) {
           await beginVoiceCall();
+          return;
+        }
+        if (isSpeaking) {
+          interruptAssistantSpeech("manual");
           return;
         }
         callListening = true;
