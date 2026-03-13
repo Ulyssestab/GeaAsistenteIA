@@ -3,770 +3,330 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Asistente</title>
+  <meta name="theme-color" content="#7b1836"/>
+  <title>Ania | Gobierno del Estado de Aguascalientes</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
   <style>
-    html, body { height:100%; margin:0; width:100%; overflow:hidden; }
-    body{
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background:#0b1220;
-      overflow:hidden;
-    }
-
-    .app{
-      position:fixed; inset:0;
-      display:grid;
-      grid-template-columns: 1fr 1.2fr;
-      background:#fff;
-      height:100dvh;
-      max-height:100dvh;
-      overflow:hidden;
-    }
-
-    .side{
-      position:relative;
-      overflow:hidden;
-      min-height:0;
-      background: radial-gradient(circle at 30% 20%, #e0f2fe, #f8fafc 55%, #eef2ff);
-      border-right:1px solid #e5e7eb;
-      display:flex;
-      align-items:flex-end;
-      justify-content:center;
-    }
-    .side img{
-      width:min(100%, 700px);
-      height:100%;
-      max-height:100%;
-      object-fit: contain;
-      object-position: center bottom;
-      filter: drop-shadow(0 14px 30px rgba(0,0,0,.18));
-      animation: floatyFull 3.2s ease-in-out infinite;
-      pointer-events:none;
-      user-select:none;
-    }
-    @keyframes floatyFull{
-      0%,100%{ transform: scale(1.03) translateY(0); }
-      50%{ transform: scale(1.03) translateY(-6px); }
-    }
-
-    .chatcol{
-      display:grid;
-      grid-template-rows: auto auto 1fr auto auto;
-      min-width: 0;
-      min-height:0;
-      overflow:hidden;
-      background:#fff;
-    }
-
-    .header{
-      height:56px; display:flex; align-items:center; justify-content:space-between;
-      padding:0 14px;
-      background:#1d4ed8;
-      color:#fff;
-      user-select:none;
-    }
-    .title{ display:flex; align-items:center; gap:10px; font-weight:800; }
-    .dot{ width:10px; height:10px; border-radius:50%; background:#22c55e; box-shadow:0 0 0 4px rgba(34,197,94,.25); }
-    .actions{ display:flex; gap:10px; align-items:center; }
-    .btn{
-      width:36px; height:36px; border-radius:12px;
-      border:1px solid rgba(255,255,255,.25);
-      background:rgba(255,255,255,.14);
-      color:#fff;
-      cursor:pointer;
-      font-weight:900;
-      display:grid; place-items:center;
-    }
-    .btn:hover{ background:rgba(255,255,255,.22); }
-
-    .tabs{
-      display:flex; gap:10px;
-      padding:10px 12px;
-      border-bottom:1px solid #e5e7eb;
-      background:#fff;
-    }
-    .tab{
-      flex:1;
-      height:40px;
-      border-radius:12px;
-      border:1px solid #dbeafe;
-      background:#f8fafc;
-      cursor:pointer;
-      font-weight:800;
-    }
-    .tab.active{ background:#eff6ff; border-color:#60a5fa; color:#1d4ed8; }
-
-    .messages{
-      padding:14px;
-      min-height:0;
-      overflow-y:auto;
-      overflow-x:hidden;
-      scrollbar-gutter: stable both-edges;
-      background:#fff;
-    }
-    .bubble{
-      max-width: 85%;
-      padding:10px 12px;
-      border-radius:14px;
-      margin:8px 0;
-      line-height:1.45;
-      font-size:14px;
-      overflow-wrap:anywhere;
-      word-wrap:break-word;
-      border:1px solid #e5e7eb;
-    }
-    .bot{ background:#f3f4f6; }
-    .me{ background:#dbeafe; border-color:#bfdbfe; margin-left:auto; }
-
-    .bubble a{
-      color:#1d4ed8;
-      text-decoration: underline;
-      font-weight:700;
-    }
-
-    .typing{
-      flex-shrink:0;
-      display:none;
-      align-items:center;
-      gap:10px;
-      padding:10px 14px;
-      border-top:1px solid #e5e7eb;
-      color:#475569;
-      font-size:13px;
-    }
-    .typing.show{ display:flex; }
-
-    .dots{ display:flex; gap:4px; }
-    .dots span{
-      width:6px; height:6px; border-radius:50%;
-      background:#64748b;
-      animation: b 1.2s infinite;
-      opacity:.4;
-    }
-    .dots span:nth-child(2){ animation-delay:.2s; }
-    .dots span:nth-child(3){ animation-delay:.4s; }
-    @keyframes b{
-      0%,100%{ transform: translateY(0); opacity:.4; }
-      50%{ transform: translateY(-4px); opacity:1; }
-    }
-
-    .controls{
-      flex-shrink:0;
-      padding:10px 12px;
-      border-top:1px solid #e5e7eb;
-      background:#fff;
-    }
-    .row{ display:flex; gap:10px; align-items:center; }
-    .input{
-      flex:1;
-      height:44px;
-      border-radius:12px;
-      border:1px solid #e5e7eb;
-      padding:0 12px;
-      font-size:14px;
-      outline:none;
-    }
-    .send{
-      height:44px;
-      padding:0 16px;
-      border-radius:12px;
-      border:0;
-      background:#1d4ed8;
-      color:#fff;
-      cursor:pointer;
-      font-weight:900;
-    }
-    .send:hover{ filter:brightness(1.05); }
-
-    .voice{ display:none; }
-    .voice.show{ display:block; }
-    .mic{
-      height:44px;
-      padding:0 16px;
-      border-radius:12px;
-      border:1px solid #e5e7eb;
-      background:#fff;
-      cursor:pointer;
-      font-weight:900;
-    }
-
-    .settings{
-      flex-shrink:0;
-      padding:8px 12px;
-      border-top:1px solid #e5e7eb;
-      background:#f8fafc;
-      font-size:13px;
-      color:#334155;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
-    }
-
-    @media (max-width: 900px){
-      .app{ grid-template-columns: 1fr; grid-template-rows: 44vh 1fr; }
-      .side{ border-right:0; border-bottom:1px solid #e5e7eb; }
-    }
+    :root{--gea-primary:#7b1836;--gea-primary-dark:#5d1028;--gea-gold:#c49a52;--gea-ink:#24323f;--gea-muted:#64748b;--gea-line:#d9e1e8;--gea-bg:#f3ece5;}
+    html,body{height:100%;margin:0;overflow:hidden}
+    body{font-family:"Segoe UI",Tahoma,Geneva,Verdana,sans-serif;background:radial-gradient(circle at top left,rgba(196,154,82,.16),transparent 28%),linear-gradient(135deg,#f8f4f0,#efe5db 48%,#f8f4f0);color:var(--gea-ink)}
+    .page-shell{min-height:100dvh;padding:1rem}
+    .app{display:grid;grid-template-columns:minmax(360px,.95fr) minmax(460px,1.15fr);width:min(1480px,100%);min-height:calc(100dvh - 2rem);max-height:calc(100dvh - 2rem);margin:0 auto;overflow:hidden;border:1px solid rgba(123,24,54,.12);border-radius:28px;background:rgba(255,255,255,.84);box-shadow:0 28px 60px rgba(53,36,26,.16);backdrop-filter:blur(12px)}
+    .side{position:relative;display:flex;flex-direction:column;justify-content:space-between;min-height:0;padding:2rem 2rem 0;overflow:hidden;background:#2D377A;color:#fff}
+    .side::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 15% 18%,rgba(255,255,255,.15),transparent 26%),linear-gradient(155deg,rgba(196,154,82,.18),transparent 45%)}
+    .side-copy,.avatar-stage{position:relative;z-index:1}
+    .gov-mark{display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem}
+    .gov-mark img,.header-logo{object-fit:contain}
+    .gov-mark img{width:78px;filter:drop-shadow(0 12px 18px rgba(0,0,0,.14))}
+    .gov-overline{display:block;margin-bottom:.35rem;font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.75)}
+    .gov-mark h1{margin:0;font-size:1.35rem;line-height:1.2;font-weight:700}
+    .hero-card{padding:1.35rem 1.4rem;margin-bottom:1.2rem;border:1px solid rgba(255,255,255,.16);border-radius:24px;background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.06))}
+    .hero-badge{display:inline-flex;padding:.38rem .8rem;border-radius:999px;background:rgba(255,255,255,.14);font-size:.74rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#fff8ec}
+    .hero-card h2{margin:1rem 0 .75rem;font-size:2.05rem;line-height:1.06;font-weight:700}
+    .hero-card p,.service-item span{margin:0;color:rgba(255,255,255,.82);line-height:1.6}
+    .service-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem}
+    .service-item{padding:1rem;border-radius:18px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.08)}
+    .service-item strong{display:block;margin-bottom:.25rem;font-size:.95rem}
+    .avatar-stage{position:relative;display:flex;align-items:flex-end;justify-content:center;min-height:390px;padding:0 1rem}
+    .avatar-stage::before{content:"";position:absolute;inset:4% 0 8%;background:url("assets/img/fondo.png") center 52%/contain no-repeat;opacity:.95;filter:drop-shadow(0 18px 34px rgba(0,0,0,.24))}
+    .avatar-stage::after{content:"";position:absolute;left:10%;right:10%;bottom:0;height:110px;background:radial-gradient(circle,rgba(0,0,0,.34),rgba(0,0,0,0) 70%);opacity:.45;filter:blur(8px)}
+    .side img#sideAvatar{position:relative;z-index:1;width:min(100%,620px);height:100%;object-fit:contain;object-position:center bottom;filter:drop-shadow(0 18px 30px rgba(0,0,0,.22));animation:floaty 3.4s ease-in-out infinite}
+    @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+    .chatcol{display:grid;grid-template-rows:auto auto 1fr auto auto;min-width:0;min-height:0;overflow:hidden;background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(250,247,244,.95))}
+    .header{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1.2rem 1.5rem;border-bottom:1px solid rgba(123,24,54,.1);background:linear-gradient(180deg,#fff,rgba(249,246,243,.98))}
+    .header-brand{display:flex;align-items:center;gap:1rem;min-width:0}
+    .header-logo{width:62px;height:62px;padding:.75rem;border-radius:20px;background:linear-gradient(180deg,#fff,#f3ece6);border:1px solid rgba(123,24,54,.08);box-shadow:0 12px 24px rgba(41,25,19,.08)}
+    .header-meta small{display:block;margin-bottom:.15rem;color:var(--gea-primary);font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+    .title{display:flex;align-items:center;gap:.7rem;font-size:1.35rem;font-weight:700}
+    .title span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .subtitle{margin-top:.2rem;color:var(--gea-muted);font-size:.94rem}
+    .dot{width:.85rem;height:.85rem;border-radius:999px;background:#24a56d;box-shadow:0 0 0 .28rem rgba(36,165,109,.18)}
+    .actions{display:flex;gap:.65rem;flex:0 0 auto}
+    .btn{display:inline-flex;align-items:center;justify-content:center}
+    .actions .btn{width:42px;height:42px;padding:0;border-radius:14px;border:1px solid rgba(123,24,54,.14);background:#fff;color:var(--gea-primary);font-size:1.2rem;font-weight:700;box-shadow:0 6px 14px rgba(41,25,19,.06)}
+    .tabs{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1rem 1.5rem;border-bottom:1px solid var(--gea-line);background:rgba(255,255,255,.74)}
+    .tabs-copy strong{display:block;font-size:.98rem}
+    .tabs-copy span,.voice-note,.typing,.settings{color:var(--gea-muted)}
+    .tab-actions{display:flex;gap:.65rem;flex-wrap:wrap}
+    .tab{min-width:118px;height:42px;padding:0 1.1rem;border-radius:999px;border:1px solid rgba(123,24,54,.14);background:#fff;color:var(--gea-primary);font-weight:700}
+    .tab.active{background:linear-gradient(180deg,var(--gea-primary),var(--gea-primary-dark));border-color:transparent;color:#fff;box-shadow:0 10px 20px rgba(123,24,54,.22)}
+    .messages{padding:1.35rem 1.5rem;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-gutter:stable both-edges;background:linear-gradient(180deg,rgba(255,255,255,.35),rgba(255,255,255,0)),radial-gradient(circle at top right,rgba(196,154,82,.08),transparent 22%),#fcfbf9}
+    .bubble{max-width:88%;padding:1rem 1.05rem;margin:.75rem 0;border-radius:20px;border:1px solid transparent;box-shadow:0 12px 24px rgba(38,28,20,.06);line-height:1.55;font-size:.96rem;overflow-wrap:anywhere}
+    .bot{background:#fff;border-color:rgba(123,24,54,.08);border-top-left-radius:.5rem}
+    .me{margin-left:auto;background:linear-gradient(180deg,#8a2243,#6f1731);color:#fff;border-top-right-radius:.5rem}
+    .bubble a{color:#8a2243;font-weight:700}
+    .me a{color:#fff7d8}
+    .typing{display:none;align-items:center;gap:.75rem;padding:1rem 1.5rem;border-top:1px solid var(--gea-line);font-size:.92rem;background:rgba(255,255,255,.72)}
+    .typing.show{display:flex}
+    .dots{display:flex;gap:.3rem}
+    .dots span{width:.42rem;height:.42rem;border-radius:999px;background:var(--gea-primary);animation:dots 1.2s infinite;opacity:.35}
+    .dots span:nth-child(2){animation-delay:.2s}.dots span:nth-child(3){animation-delay:.4s}
+    @keyframes dots{0%,100%{transform:translateY(0);opacity:.35}50%{transform:translateY(-4px);opacity:1}}
+    .controls{padding:1rem 1.5rem;border-top:1px solid var(--gea-line);background:rgba(255,255,255,.88)}
+    .composer-row{display:flex;gap:.85rem;align-items:center}
+    .input{height:50px;border-radius:16px;border:1px solid rgba(123,24,54,.14);padding:0 1rem;background:#fff}
+    .input:focus{border-color:rgba(123,24,54,.34);box-shadow:0 0 0 .25rem rgba(123,24,54,.12)}
+    .send,.mic{height:50px;padding:0 1.25rem;border-radius:16px;font-weight:700;white-space:nowrap}
+    .send{background:linear-gradient(180deg,var(--gea-primary),var(--gea-primary-dark));border:0;color:#fff;box-shadow:0 12px 22px rgba(123,24,54,.22)}
+    .voice{display:none}.voice.show{display:block}
+    .mic{border:1px solid rgba(123,24,54,.14);background:#fff;color:var(--gea-primary)}
+    .settings{display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:.95rem 1.5rem 1.1rem;border-top:1px solid var(--gea-line);font-size:.88rem;background:linear-gradient(180deg,rgba(247,241,236,.95),rgba(244,238,232,.98))}
+    .settings label{display:flex;align-items:center;gap:.6rem;color:var(--gea-ink);font-weight:600}
+    .settings input[type="checkbox"]{width:1.05rem;height:1.05rem;accent-color:var(--gea-primary)}
+    @media (max-width:1199px){.hero-card h2{font-size:1.85rem}.service-grid{grid-template-columns:1fr}}
+    @media (max-width:991px){html,body,body{overflow:auto}.page-shell{padding:.75rem}.app{grid-template-columns:1fr;grid-template-rows:minmax(360px,44vh) 1fr;min-height:calc(100dvh - 1.5rem);max-height:none;border-radius:24px}.side{padding:1.5rem 1.25rem 0}.avatar-stage{min-height:280px}.header,.tabs,.messages,.typing,.controls,.settings{padding-left:1rem;padding-right:1rem}}
+    @media (max-width:640px){.header{align-items:flex-start}.header-logo{width:54px;height:54px;padding:.6rem}.title{font-size:1.12rem}.subtitle{font-size:.84rem}.tabs{flex-direction:column;align-items:flex-start}.tab-actions{width:100%}.tab{flex:1 1 0}.composer-row,.settings{flex-direction:column;align-items:stretch}.send,.mic{text-align:center;justify-content:center}}
   </style>
 </head>
 <body>
-  <div class="app">
-    <div class="side">
-      <img id="sideAvatar" alt="avatar"/>
-    </div>
-
-    <div class="chatcol">
-      <div class="header">
-        <div class="title"><span class="dot"></span><span id="titleTxt">Asistente</span></div>
-        <div class="actions">
-          <button class="btn" id="btnMin" type="button" title="Minimizar">–</button>
-          <button class="btn" id="btnClose" type="button" title="Cerrar">✕</button>
+  <div class="page-shell container-fluid">
+    <div class="app">
+      <div class="side">
+        <div class="side-copy">
+          <div class="gov-mark">
+            <img src="assets/img/logo_gob.png" alt="Gobierno del Estado de Aguascalientes"/>
+            <div>
+              <span class="gov-overline">Gobierno del Estado de Aguascalientes</span>
+              <h1>Atencion ciudadana digital con imagen institucional</h1>
+            </div>
+          </div>
+          <div class="hero-card">
+            <span class="hero-badge">Asistente virtual oficial</span>
+            <h2>Una experiencia mas clara, confiable y cercana para la ciudadania</h2>
+            <p>Ania acompana a las personas con informacion de tramites, citas, costos, estatus y ubicacion de oficinas en una interfaz mas sobria y profesional.</p>
+          </div>
+          <div class="service-grid">
+            <div class="service-item"><strong>Orientacion institucional</strong><span>Mensajes mas limpios, estructura formal y mejor jerarquia visual.</span></div>
+            <div class="service-item"><strong>Atencion multicanal</strong><span>Interaccion por texto o voz desde un mismo espacio de consulta.</span></div>
+            <div class="service-item"><strong>Informacion util</strong><span>Tramites, costos, citas, estatus y ubicaciones en una sola ventana.</span></div>
+            <div class="service-item"><strong>Imagen oficial</strong><span>Paleta sobria, logo institucional y fondo grafico detras del avatar.</span></div>
+          </div>
+        </div>
+        <div class="avatar-stage">
+          <img id="sideAvatar" alt="Avatar de Ania"/>
         </div>
       </div>
-
-      <div class="tabs">
-        <button class="tab active" id="tabText" type="button">Texto</button>
-        <button class="tab" id="tabVoice" type="button">Voz</button>
-      </div>
-
-      <div class="messages" id="messages"></div>
-
-      <div class="typing" id="typing">
-        <div class="dots"><span></span><span></span><span></span></div>
-        <span>Buscando información…</span>
-      </div>
-
-      <div class="controls">
-        <div class="text row" id="textRow">
-          <input class="input" id="input" type="text" placeholder="Escribe tu mensaje…"/>
-          <button class="send" id="send" type="button">Enviar</button>
+      <div class="chatcol">
+        <div class="header">
+          <div class="header-brand">
+            <img class="header-logo" src="assets/img/logo_gob.png" alt="Logotipo del Gobierno del Estado de Aguascalientes"/>
+            <div class="header-meta">
+              <small>Servicio digital institucional</small>
+              <div class="title"><span class="dot"></span><span id="titleTxt">Ania</span></div>
+              <div class="subtitle">Asistente virtual del Gobierno del Estado de Aguascalientes</div>
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn" id="btnMin" type="button" title="Minimizar">&minus;</button>
+            <button class="btn" id="btnClose" type="button" title="Cerrar">&times;</button>
+          </div>
         </div>
-
-        <div class="voice" id="voiceBox">
-          <div style="margin-bottom:10px;color:#475569;font-size:13px;">Pulsa “Hablar” para dictar tu mensaje.</div>
-          <button class="mic" id="mic" type="button">🎤 Hablar</button>
+        <div class="tabs">
+          <div class="tabs-copy">
+            <strong>Canal de atencion</strong>
+            <span>Selecciona la forma en la que deseas interactuar con Ania.</span>
+          </div>
+          <div class="tab-actions">
+            <button class="tab active btn" id="tabText" type="button">Texto</button>
+            <button class="tab btn" id="tabVoice" type="button">Voz</button>
+          </div>
         </div>
-      </div>
-
-      <div class="settings">
-        <label style="display:flex; gap:8px; align-items:center;">
-          <input id="tts" type="checkbox"/>
-          Responder con voz
-        </label>
-        <span style="opacity:.75;">Pestaña independiente</span>
+        <div class="messages" id="messages"></div>
+        <div class="typing" id="typing">
+          <div class="dots"><span></span><span></span><span></span></div>
+          <span>Buscando informacion...</span>
+        </div>
+        <div class="controls">
+          <div class="composer-row" id="textRow">
+            <input class="input form-control" id="input" type="text" placeholder="Escribe tu mensaje aqui"/>
+            <button class="send btn" id="send" type="button">Enviar consulta</button>
+          </div>
+          <div class="voice" id="voiceBox">
+            <div class="voice-note">Pulsa el boton para dictar tu mensaje.</div>
+            <button class="mic btn" id="mic" type="button">Hablar</button>
+          </div>
+        </div>
+        <div class="settings">
+          <label><input id="tts" type="checkbox"/>Responder con voz</label>
+          <span>Ventana independiente para orientacion ciudadana oficial.</span>
+        </div>
       </div>
     </div>
   </div>
-
-<script>
-  const p = new URLSearchParams(location.search);
-
-  function pick(...vals){
-    for (const v of vals){
-      if (v !== null && v !== undefined && String(v).trim() !== "") return v;
-    }
-    return "";
-  }
-
-  const cfg = {
-    title: pick(p.get("title"), "Asistente"),
-    avatar: pick(p.get("avatar"), ""),
-    avatarIdle: pick(p.get("avatarIdle"), p.get("avatar"), ""),
-    avatarListen: pick(p.get("avatarListen"), p.get("avatar"), ""),
-    avatarRead: pick(p.get("avatarRead"), p.get("avatarLeyendo"), p.get("avatarThink"), p.get("avatar"), ""),
-    avatarThink: pick(p.get("avatarThink"), p.get("avatarPensando"), p.get("avatarRead"), p.get("avatar"), ""),
-    avatarTalk: pick(p.get("avatarTalk"), p.get("avatarHablando"), p.get("avatar"), ""),
-
-    apiUrl: pick(p.get("apiUrl"), p.get("aiEndpoint"), ""),
-    ttsUrl: pick(p.get("ttsUrl"), p.get("ttsEndpoint"), "/GeaAsistenteHub/api/tts.ashx"),
-    ttsProvider: pick(p.get("ttsProvider"), p.get("voiceProvider"), "elevenlabs").toLowerCase(),
-    elevenVoiceId: pick(p.get("elevenVoiceId"), p.get("elevenVoice"), ""),
-    lang: pick(p.get("lang"), "es-MX"),
-    ttsEnabled: (p.get("tts")==="1" || p.get("tts")==="true")
-  };
-
-
-  
-// ===== Sesión de conversación =====
-// La API (agentemcp) usa el campo "session" para hilar el contexto entre mensajes.
-// El lanzador (demo_sin-azure_mcp) envía una sesión nueva por cada apertura: CHAT_ + UUID.
-// Si no llega por querystring, aquí generamos una.
-const rawSession = pick(p.get("session"), "");
-const genUuid = () => (window.crypto && typeof crypto.randomUUID === "function")
-  ? crypto.randomUUID()
-  : ("u-" + Date.now() + "-" + Math.random().toString(16).slice(2));
-
-const sessionId = rawSession
-  ? (rawSession.startsWith("CHAT_") ? rawSession : ("CHAT_" + rawSession))
-  : ("CHAT_" + genUuid());
-
-const titleTxt = document.getElementById("titleTxt");
-  const sideAvatar = document.getElementById("sideAvatar");
-  const messages = document.getElementById("messages");
-  const typing = document.getElementById("typing");
-  const input = document.getElementById("input");
-  const send = document.getElementById("send");
-  const tabText = document.getElementById("tabText");
-  const tabVoice = document.getElementById("tabVoice");
-  const textRow = document.getElementById("textRow");
-  const voiceBox = document.getElementById("voiceBox");
-  const mic = document.getElementById("mic");
-  const tts = document.getElementById("tts");
-  const btnClose = document.getElementById("btnClose");
-  const btnMin = document.getElementById("btnMin");
-
-  titleTxt.textContent = cfg.title;
-  document.title = cfg.title;
-  sideAvatar.src = cfg.avatarIdle || cfg.avatar;
-
-  function setAvatarState(state){
-    const map = {
-      idle: cfg.avatarIdle,
-      listen: cfg.avatarListen,
-      read: cfg.avatarRead,
-      think: cfg.avatarThink,
-      talk: cfg.avatarTalk
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const p = new URLSearchParams(location.search);
+    function pick(...vals){ for (const v of vals){ if (v !== null && v !== undefined && String(v).trim() !== "") return v; } return ""; }
+    const cfg = {
+      title: pick(p.get("title"), "Ania"),
+      avatar: pick(p.get("avatar"), ""),
+      avatarIdle: pick(p.get("avatarIdle"), p.get("avatar"), ""),
+      avatarListen: pick(p.get("avatarListen"), p.get("avatar"), ""),
+      avatarRead: pick(p.get("avatarRead"), p.get("avatarLeyendo"), p.get("avatarThink"), p.get("avatar"), ""),
+      avatarThink: pick(p.get("avatarThink"), p.get("avatarPensando"), p.get("avatarRead"), p.get("avatar"), ""),
+      avatarTalk: pick(p.get("avatarTalk"), p.get("avatarHablando"), p.get("avatar"), ""),
+      apiUrl: pick(p.get("apiUrl"), p.get("aiEndpoint"), ""),
+      ttsUrl: pick(p.get("ttsUrl"), p.get("ttsEndpoint"), "/GeaAsistenteHub/api/tts.ashx"),
+      ttsProvider: pick(p.get("ttsProvider"), p.get("voiceProvider"), "elevenlabs").toLowerCase(),
+      elevenVoiceId: pick(p.get("elevenVoiceId"), p.get("elevenVoice"), ""),
+      lang: pick(p.get("lang"), "es-MX"),
+      ttsEnabled: (p.get("tts")==="1" || p.get("tts")==="true")
     };
-    sideAvatar.src = map[state] || cfg.avatarIdle || cfg.avatar;
-  }
-
-  function setTyping(on){
-    typing.classList.toggle("show", !!on);
-    if (on) setAvatarState(cfg.avatarRead ? "read" : "think");
-    else setAvatarState("idle");
-  }
-
-  function normalizeText(s){
-    return String(s || "").replace(/\\n/g, "\n");
-  }
-
-  function escapeHtml(s){
-    return String(s || "")
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#39;");
-  }
-
-  function safeHttpUrl(url){
-    try{
-      const u = new URL(url, location.href);
-      if (u.protocol === "http:" || u.protocol === "https:") return u.href;
-    }catch(_){}
-    return null;
-  }
-
-  function renderBotHtml(raw){
-    const text = normalizeText(raw);
-    const anchors = [];
-    let i = 0;
-
-    function token(anchorHtml){
-      const t = "__L" + (i++) + "__";
-      anchors.push({ t, anchorHtml });
-      return t;
+    const rawSession = pick(p.get("session"), "");
+    const genUuid = () => (window.crypto && typeof crypto.randomUUID === "function") ? crypto.randomUUID() : ("u-" + Date.now() + "-" + Math.random().toString(16).slice(2));
+    const sessionId = rawSession ? (rawSession.startsWith("CHAT_") ? rawSession : ("CHAT_" + rawSession)) : ("CHAT_" + genUuid());
+    const titleTxt = document.getElementById("titleTxt");
+    const sideAvatar = document.getElementById("sideAvatar");
+    const messages = document.getElementById("messages");
+    const typing = document.getElementById("typing");
+    const input = document.getElementById("input");
+    const send = document.getElementById("send");
+    const tabText = document.getElementById("tabText");
+    const tabVoice = document.getElementById("tabVoice");
+    const textRow = document.getElementById("textRow");
+    const voiceBox = document.getElementById("voiceBox");
+    const mic = document.getElementById("mic");
+    const tts = document.getElementById("tts");
+    const btnClose = document.getElementById("btnClose");
+    const btnMin = document.getElementById("btnMin");
+    titleTxt.textContent = cfg.title;
+    document.title = cfg.title + " | Gobierno del Estado de Aguascalientes";
+    sideAvatar.src = cfg.avatarIdle || cfg.avatar;
+    function setAvatarState(state){ const map = { idle: cfg.avatarIdle, listen: cfg.avatarListen, read: cfg.avatarRead, think: cfg.avatarThink, talk: cfg.avatarTalk }; sideAvatar.src = map[state] || cfg.avatarIdle || cfg.avatar; }
+    function setTyping(on){ typing.classList.toggle("show", !!on); if (on) setAvatarState(cfg.avatarRead ? "read" : "think"); else setAvatarState("idle"); }
+    function normalizeText(s){ return String(s || "").replace(/\\n/g, "\n"); }
+    function escapeHtml(s){ return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"); }
+    function safeHttpUrl(url){ try{ const u = new URL(url, location.href); if (u.protocol === "http:" || u.protocol === "https:") return u.href; }catch(_){ } return null; }
+    function renderBotHtml(raw){
+      const text = normalizeText(raw); const anchors = []; let i = 0;
+      function token(anchorHtml){ const t = "__L" + (i++) + "__"; anchors.push({ t, anchorHtml }); return t; }
+      let tmp = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/gi, function(_, label, url){ const clean = safeHttpUrl(url); if (!clean) return label; const safeLabel = escapeHtml((label || "").trim() || "Mas informacion aqui"); return token('<a href="' + clean + '" target="_blank" rel="noopener noreferrer">' + safeLabel + '</a>'); });
+      tmp = tmp.replace(/https?:\/\/[^\s)]+/gi, function(url){ const clean = safeHttpUrl(url); if (!clean) return ""; return token('<a href="' + clean + '" target="_blank" rel="noopener noreferrer">Mas informacion aqui</a>'); });
+      let html = escapeHtml(tmp).replace(/\n/g, "<br>"); anchors.forEach(function(x){ html = html.split(x.t).join(x.anchorHtml); }); return html;
     }
-
-    // Markdown [texto](url)
-    let tmp = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/gi, function(_, label, url){
-      const clean = safeHttpUrl(url);
-      if (!clean) return label;
-      const safeLabel = escapeHtml((label || "").trim() || "Más info aquí");
-      return token('<a href="' + clean + '" target="_blank" rel="noopener noreferrer">' + safeLabel + '</a>');
-    });
-
-    // URLs sueltas
-    tmp = tmp.replace(/https?:\/\/[^\s)]+/gi, function(url){
-      const clean = safeHttpUrl(url);
-      if (!clean) return "";
-      return token('<a href="' + clean + '" target="_blank" rel="noopener noreferrer">Más info aquí</a>');
-    });
-
-    let html = escapeHtml(tmp).replace(/\n/g, "<br>");
-    anchors.forEach(function(x){
-      html = html.split(x.t).join(x.anchorHtml);
-    });
-
-    return html;
-  }
-
-  function toSpeechText(raw){
-    let t = normalizeText(raw);
-
-    // [texto](url) -> texto
-    t = t.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/gi, "$1");
-    // Quita URLs sueltas
-    t = t.replace(/https?:\/\/[^\s)]+/gi, "");
-    // Limpia markdown que a veces se lee literal
-    t = t
-      .replace(/[*_`~#>|]/g, " ")
-      .replace(/^\s*[-•]\s+/gm, "")
-      .replace(/^\s*\d+\.\s+/gm, "")
-      .replace(/\s{2,}/g, " ")
-      .trim();
-
-    t = t.replace(/\r/g, "").replace(/\n{2,}/g, ". ").replace(/\n/g, ", ");
-    return t;
-  }
-
-  function addBubble(text, who){
-    const div = document.createElement("div");
-    div.className = "bubble " + (who === "me" ? "me" : "bot");
-
-    if (who === "bot") div.innerHTML = renderBotHtml(text);
-    else div.textContent = normalizeText(text);
-
-    messages.appendChild(div);
-    requestAnimationFrame(() => {
-      messages.scrollTop = messages.scrollHeight;
-    });
-  }
-
-  async function parseApiResponse(res){
-    const ct = (res.headers.get("content-type") || "").toLowerCase();
-
-    if (ct.includes("application/json")){
-      const data = await res.json();
-      return (
-        data.output || data.answer || data.text || data.message ||
-        data.response || data.result || data.data || ""
-      ).toString().trim();
+    function toSpeechText(raw){
+      let t = normalizeText(raw);
+      t = t.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/gi, "$1").replace(/https?:\/\/[^\s)]+/gi, "").replace(/[*_`~#>|]/g, " ").replace(/^\s*[-\u2022]\s+/gm, "").replace(/^\s*\d+\.\s+/gm, "").replace(/\s{2,}/g, " ").trim();
+      return t.replace(/\r/g, "").replace(/\n{2,}/g, ". ").replace(/\n/g, ", ");
     }
-
-    const txt = (await res.text()).trim();
-    return txt || "";
-  }
-
-  async function callApi(userText){
-    if (!cfg.apiUrl){
-      await new Promise(r => setTimeout(r, 350));
-      return "Recibí tu mensaje: " + userText;
+    function addBubble(text, who){
+      const div = document.createElement("div");
+      div.className = "bubble " + (who === "me" ? "me" : "bot");
+      if (who === "bot") div.innerHTML = renderBotHtml(text); else div.textContent = normalizeText(text);
+      messages.appendChild(div);
+      requestAnimationFrame(() => { messages.scrollTop = messages.scrollHeight; });
     }
-
-    // 1) Contrato nuevo (ws/agentemcp): { session, input }
-    let res = await fetch(cfg.apiUrl, {
-      method: "POST",
-      headers: { "Content-Type":"application/json" },
-      body: JSON.stringify({
-        session: sessionId,
-        input: userText
-      })
-    });
-
-    // 2) Fallback contrato anterior (ws/agente): "hola" (JSON string)
-    if (!res.ok && (res.status === 400 || res.status === 415)){
-      res = await fetch(cfg.apiUrl, {
-        method: "POST",
-        headers: { "Content-Type":"application/json; charset=utf-8" },
-        body: JSON.stringify(userText)
-      });
-    }
-
-    if (!res.ok) throw new Error("HTTP " + res.status);
-
-    const out = await parseApiResponse(res);
-    return out || "Listo.";
-  }
-
-
-  function b64ToBlob(base64, mimeType){
-    const clean = (base64 || "").split(",").pop();
-    const byteChars = atob(clean);
-    const byteNumbers = new Array(byteChars.length);
-    for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
-    const byteArray = new Uint8Array(byteNumbers);
-    return new Blob([byteArray], { type: mimeType || "audio/mpeg" });
-  }
-
-  function playBlob(blob){
-    const url = URL.createObjectURL(blob);
-    const audio = new Audio(url);
-    audio.onended = () => { URL.revokeObjectURL(url); setAvatarState("idle"); };
-    audio.onerror = () => { URL.revokeObjectURL(url); setAvatarState("idle"); };
-    audio.play().catch(() => setAvatarState("idle"));
-  }
-
-  async function speak(text){
-    text = (text || "").trim();
-    if (!tts.checked || !text) return;
-
-    if (cfg.ttsProvider === "browser" || !cfg.ttsUrl) {
-      if (!("speechSynthesis" in window)) return;
-      try{
-        setAvatarState("talk");
-        const u = new SpeechSynthesisUtterance(text);
-        u.lang = cfg.lang || "es-MX";
-        u.onend = () => setAvatarState("idle");
-        u.onerror = () => setAvatarState("idle");
-        speechSynthesis.cancel();
-        speechSynthesis.speak(u);
-      } catch {
-        setAvatarState("idle");
-      }
-      return;
-    }
-
-    try{
-      setAvatarState("talk");
-      const res = await fetch(cfg.ttsUrl, {
-        method: "POST",
-        headers: { "Content-Type":"application/json" },
-        body: JSON.stringify({
-          text,
-          provider: cfg.ttsProvider,
-          voiceProvider: cfg.ttsProvider,
-          lang: cfg.lang || "es-MX",
-          locale: cfg.lang || "es-MX",
-          elevenVoiceId: cfg.elevenVoiceId || undefined,
-          elevenVoice: cfg.elevenVoiceId || undefined
-        })
-      });
-
-      if (!res.ok) throw new Error("HTTP " + res.status);
-
+    async function parseApiResponse(res){
       const ct = (res.headers.get("content-type") || "").toLowerCase();
-
-      if (ct.includes("application/json")){
-        const data = await res.json();
-        if (data.audioBase64 || data.audio){
-          const blob = b64ToBlob(data.audioBase64 || data.audio, data.mimeType || "audio/mpeg");
-          playBlob(blob);
-          return;
-        }
-        if (data.url){
-          const audio = new Audio(data.url);
-          audio.onended = () => setAvatarState("idle");
-          audio.onerror = () => setAvatarState("idle");
-          await audio.play().catch(() => setAvatarState("idle"));
-          return;
-        }
-        setAvatarState("idle");
+      if (ct.includes("application/json")){ const data = await res.json(); return (data.output || data.answer || data.text || data.message || data.response || data.result || data.data || "").toString().trim(); }
+      const txt = (await res.text()).trim(); return txt || "";
+    }
+    async function callApi(userText){
+      if (!cfg.apiUrl){ await new Promise(r => setTimeout(r, 350)); return "Recibi tu mensaje: " + userText; }
+      let res = await fetch(cfg.apiUrl, { method: "POST", headers: { "Content-Type":"application/json" }, body: JSON.stringify({ session: sessionId, input: userText }) });
+      if (!res.ok && (res.status === 400 || res.status === 415)){ res = await fetch(cfg.apiUrl, { method: "POST", headers: { "Content-Type":"application/json; charset=utf-8" }, body: JSON.stringify(userText) }); }
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const out = await parseApiResponse(res); return out || "Listo.";
+    }
+    function b64ToBlob(base64, mimeType){
+      const clean = (base64 || "").split(",").pop(); const byteChars = atob(clean); const byteNumbers = new Array(byteChars.length);
+      for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
+      return new Blob([new Uint8Array(byteNumbers)], { type: mimeType || "audio/mpeg" });
+    }
+    function playBlob(blob){
+      const url = URL.createObjectURL(blob); const audio = new Audio(url);
+      audio.onended = () => { URL.revokeObjectURL(url); setAvatarState("idle"); };
+      audio.onerror = () => { URL.revokeObjectURL(url); setAvatarState("idle"); };
+      audio.play().catch(() => setAvatarState("idle"));
+    }
+    async function speak(text){
+      text = (text || "").trim();
+      if (!tts.checked || !text) return;
+      if (cfg.ttsProvider === "browser" || !cfg.ttsUrl) {
+        if (!("speechSynthesis" in window)) return;
+        try{
+          setAvatarState("talk");
+          const u = new SpeechSynthesisUtterance(text);
+          u.lang = cfg.lang || "es-MX";
+          u.onend = () => setAvatarState("idle");
+          u.onerror = () => setAvatarState("idle");
+          speechSynthesis.cancel(); speechSynthesis.speak(u);
+        } catch { setAvatarState("idle"); }
         return;
       }
-
-      const blob = await res.blob();
-      playBlob(blob);
-    } catch {
-      setAvatarState("idle");
+      try{
+        setAvatarState("talk");
+        const res = await fetch(cfg.ttsUrl, { method: "POST", headers: { "Content-Type":"application/json" }, body: JSON.stringify({ text, provider: cfg.ttsProvider, voiceProvider: cfg.ttsProvider, lang: cfg.lang || "es-MX", locale: cfg.lang || "es-MX", elevenVoiceId: cfg.elevenVoiceId || undefined, elevenVoice: cfg.elevenVoiceId || undefined }) });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const ct = (res.headers.get("content-type") || "").toLowerCase();
+        if (ct.includes("application/json")){
+          const data = await res.json();
+          if (data.audioBase64 || data.audio){ playBlob(b64ToBlob(data.audioBase64 || data.audio, data.mimeType || "audio/mpeg")); return; }
+          if (data.url){ const audio = new Audio(data.url); audio.onended = () => setAvatarState("idle"); audio.onerror = () => setAvatarState("idle"); await audio.play().catch(() => setAvatarState("idle")); return; }
+          setAvatarState("idle"); return;
+        }
+        playBlob(await res.blob());
+      } catch { setAvatarState("idle"); }
     }
-  }
-
-  
-  // ===== Menú ciudadano (1–6) =====
-  // El ciudadano puede escribir cualquier cosa; si escribe 1–6 (o MENÚ), se muestra guía rápida.
-  // Si selecciona 1–5, el SIGUIENTE mensaje se envía a la API con contexto.
-  let pendingMenu = null; // "1".."5"
-  function buildWelcomeMessage(){
-    return (
-      "¡Hola! Soy Ania, tu asistente virtual del Gobierno del Estado de Aguascalientes.\n\n" +
-      "Puedo ayudarte a conocer los requisitos y costos de un trámite, agendar o consultar citas, revisar el estatus de tu trámite, y ubicar oficinas con sus horarios de atención.\n" +
-      "Solo dime qué necesitas y con gusto te comparto la información."
-    );
-  }
-
-
-
-  function buildMainMenu(){
-    return (
-      "¡Hola! Soy " + (cfg.title || "tu asistente") + ".\n\n" +
-      "Elige una opción (o escribe tu pregunta):\n" +
-      "1) Requisitos de un trámite\n" +
-      "2) Costos de un trámite\n" +
-      "3) Citas\n" +
-      "4) Estatus de trámite\n" +
-      "5) Ubicación y horarios de atención\n" +
-      "6) Centro de contacto digital 070\n\n" +
-      "Tip: escribe MENÚ para ver estas opciones otra vez."
-    );
-  }
-
-  function buildRoutedPrompt(opt, userText){
-    const map = {
-      "1": "Requisitos",
-      "2": "Costos",
-      "3": "Citas",
-      "4": "Estatus",
-      "5": "Ubicación y horarios"
-    };
-    const label = map[String(opt)] || "Atención ciudadana";
-    return `Opción ${opt} (${label}). Mensaje del ciudadano: ${userText}`;
-  }
-
-  function handleMenuInput(raw){
-    const t = (raw || "").trim();
-    const low = t.toLowerCase();
-
-    // re-mostrar menú
-    if (low === "menu" || low === "menú" || low === "opciones" || low === "ayuda") {
-      addBubble(buildMainMenu(), "bot");
-      setAvatarState("idle");
-      return true;
+    let pendingMenu = null;
+    function buildWelcomeMessage(){
+      return "\u00a1Hola! Soy Ania, tu asistente virtual del Gobierno del Estado de Aguascalientes.\n\nPuedo ayudarte a conocer los requisitos y costos de un tramite, agendar o consultar citas, revisar el estatus de tu tramite, y ubicar oficinas con sus horarios de atencion.\nSolo dime que necesitas y con gusto te comparto la informacion.";
     }
-
-    // selección 1–6
-    if (/^[1-6]$/.test(t)) {
-      if (t === "1") {
-        pendingMenu = "1";
-        addBubble("¿De qué trámite quieres saber los requisitos?", "bot");
-        setAvatarState("idle");
-        return true;
-      }
-      if (t === "2") {
-        pendingMenu = "2";
-        addBubble("¿De qué trámite quieres conocer el costo?", "bot");
-        setAvatarState("idle");
-        return true;
-      }
-      if (t === "3") {
-        pendingMenu = "3";
-        addBubble("¿De qué trámite buscas cita o quieres conocer el costo?", "bot");
-        setAvatarState("idle");
-        return true;
-      }
-      if (t === "4") {
-        pendingMenu = "4";
-        addBubble("¿De qué trámite se trata y cuál es tu folio?", "bot");
-        setAvatarState("idle");
-        return true;
-      }
-      if (t === "5") {
-        pendingMenu = "5";
-        addBubble("¿De qué dependencia necesitas la ubicación y los horarios de atención?", "bot");
-        setAvatarState("idle");
-        return true;
-      }
-      if (t === "6") {
-        pendingMenu = null;
-        const msg = [
-          "Centro de Contacto Digital 070",
-          "",
-          "- WhatsApp: [Abrir WhatsApp](https://wa.me/5214494699898)",
-          "- Teléfono: 070",
-          "- WhatsApp (número): +52 1 449 469 9898",
-          "- Correo: contactodigital070@aguascalientes.gob.mx"
-        ].join("\n");
-        addBubble(msg, "bot");
-        setAvatarState("idle");
-        return true;
-      }
+    function buildMainMenu(){
+      return "\u00a1Hola! Soy " + (cfg.title || "tu asistente") + ".\n\nElige una opcion (o escribe tu pregunta):\n1) Requisitos de un tramite\n2) Costos de un tramite\n3) Citas\n4) Estatus de tramite\n5) Ubicacion y horarios de atencion\n6) Centro de contacto digital 070\n\nTip: escribe MENU para ver estas opciones otra vez.";
     }
-
-    return false;
-  }
-
-
-  async function sendMessage(){
-    const raw = (input.value || "").trim();
-    if (!raw) return;
-
-    input.value = "";
-    addBubble(raw, "me");
-
-    // Si el ciudadano escribió 1–6 o MENÚ, resolvemos aquí (sin ir a la API).
-    if (handleMenuInput(raw)) return;
-
-    // Si venimos de una opción del menú (1–5), el siguiente mensaje se envía a la API con contexto.
-    const toSend = pendingMenu ? buildRoutedPrompt(pendingMenu, raw) : raw;
-    pendingMenu = null;
-
-    setTyping(true);
-
-    try{
-      const answer = await callApi(toSend);
-      setTyping(false);
-      addBubble(answer, "bot");
-
-      const speechText = toSpeechText(answer);
-      if (speechText) speak(speechText);
-    } catch {
-      setTyping(false);
-      addBubble("Ocurrió un error al consultar la información. Intenta de nuevo.", "bot");
+    function buildRoutedPrompt(opt, userText){
+      const map = { "1": "Requisitos", "2": "Costos", "3": "Citas", "4": "Estatus", "5": "Ubicacion y horarios" };
+      const label = map[String(opt)] || "Atencion ciudadana";
+      return "Opcion " + opt + " (" + label + "). Mensaje del ciudadano: " + userText;
     }
-  }
-
-  // Tabs
-  tabText.addEventListener("click", () => {
-    tabText.classList.add("active");
-    tabVoice.classList.remove("active");
-    textRow.style.display = "flex";
-    voiceBox.classList.remove("show");
-    input.focus();
-    setAvatarState("idle");
-  });
-
-  tabVoice.addEventListener("click", () => {
-    tabVoice.classList.add("active");
-    tabText.classList.remove("active");
-    textRow.style.display = "none";
-    voiceBox.classList.add("show");
-    setAvatarState("idle");
-  });
-
-  send.addEventListener("click", sendMessage);
-  input.addEventListener("keydown", (e) => { if (e.key === "Enter") sendMessage(); });
-
-  btnClose.addEventListener("click", () => {
-    try { window.close(); } catch {}
-    // fallback por si no permite cerrar pestaña
-    if (!window.closed) history.back();
-  });
-
-  btnMin.addEventListener("click", () => {
-    const app = document.querySelector(".app");
-    const isMini = app.dataset.mini === "1";
-    app.dataset.mini = isMini ? "0" : "1";
-
-    if (!isMini){
-      app.style.gridTemplateColumns = "1fr";
-      document.querySelector(".side").style.display = "none";
-      document.querySelector(".tabs").style.display = "none";
-      messages.style.display = "none";
-      typing.style.display = "none";
-      document.querySelector(".controls").style.display = "none";
-      document.querySelector(".settings").style.display = "none";
-      btnMin.textContent = "+";
-    } else {
-      app.style.gridTemplateColumns = "";
-      document.querySelector(".side").style.display = "";
-      document.querySelector(".tabs").style.display = "";
-      messages.style.display = "";
-      typing.style.display = "";
-      document.querySelector(".controls").style.display = "";
-      document.querySelector(".settings").style.display = "";
-      btnMin.textContent = "–";
-    }
-  });
-
-  // STT navegador
-  (function initVoice(){
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) return;
-
-    const rec = new SR();
-    rec.lang = cfg.lang || "es-MX";
-    rec.interimResults = false;
-
-    rec.onstart = () => { setAvatarState("listen"); mic.textContent = "⏺️ Escuchando…"; };
-    rec.onend = () => { setAvatarState("idle"); mic.textContent = "🎤 Hablar"; };
-    rec.onerror = () => { setAvatarState("idle"); mic.textContent = "🎤 Hablar"; };
-    rec.onresult = (ev) => {
-      const t = (ev.results && ev.results[0] && ev.results[0][0]) ? ev.results[0][0].transcript : "";
-      if (t){
-        input.value = t;
-        sendMessage();
+    function handleMenuInput(raw){
+      const t = (raw || "").trim(); const low = t.toLowerCase();
+      if (low === "menu" || low === "men\u00fa" || low === "opciones" || low === "ayuda") { addBubble(buildMainMenu(), "bot"); setAvatarState("idle"); return true; }
+      if (/^[1-6]$/.test(t)) {
+        if (t === "1") { pendingMenu = "1"; addBubble("\u00bfDe que tramite quieres saber los requisitos?", "bot"); setAvatarState("idle"); return true; }
+        if (t === "2") { pendingMenu = "2"; addBubble("\u00bfDe que tramite quieres conocer el costo?", "bot"); setAvatarState("idle"); return true; }
+        if (t === "3") { pendingMenu = "3"; addBubble("\u00bfDe que tramite buscas cita o quieres conocer el costo?", "bot"); setAvatarState("idle"); return true; }
+        if (t === "4") { pendingMenu = "4"; addBubble("\u00bfDe que tramite se trata y cual es tu folio?", "bot"); setAvatarState("idle"); return true; }
+        if (t === "5") { pendingMenu = "5"; addBubble("\u00bfDe que dependencia necesitas la ubicacion y los horarios de atencion?", "bot"); setAvatarState("idle"); return true; }
+        if (t === "6") { pendingMenu = null; addBubble(["Centro de Contacto Digital 070","","- WhatsApp: [Abrir WhatsApp](https://wa.me/5214494699898)","- Telefono: 070","- WhatsApp (numero): +52 1 449 469 9898","- Correo: contactodigital070@aguascalientes.gob.mx"].join("\n"), "bot"); setAvatarState("idle"); return true; }
       }
-    };
-
-    mic.addEventListener("click", () => {
-      try { rec.start(); } catch {}
+      return false;
+    }
+    async function sendMessage(){
+      const raw = (input.value || "").trim(); if (!raw) return;
+      input.value = ""; addBubble(raw, "me");
+      if (handleMenuInput(raw)) return;
+      const toSend = pendingMenu ? buildRoutedPrompt(pendingMenu, raw) : raw; pendingMenu = null; setTyping(true);
+      try{ const answer = await callApi(toSend); setTyping(false); addBubble(answer, "bot"); const speechText = toSpeechText(answer); if (speechText) speak(speechText); }
+      catch { setTyping(false); addBubble("Ocurrio un error al consultar la informacion. Intenta de nuevo.", "bot"); }
+    }
+    tabText.addEventListener("click", () => { tabText.classList.add("active"); tabVoice.classList.remove("active"); textRow.style.display = "flex"; voiceBox.classList.remove("show"); input.focus(); setAvatarState("idle"); });
+    tabVoice.addEventListener("click", () => { tabVoice.classList.add("active"); tabText.classList.remove("active"); textRow.style.display = "none"; voiceBox.classList.add("show"); setAvatarState("idle"); });
+    send.addEventListener("click", sendMessage);
+    input.addEventListener("keydown", (e) => { if (e.key === "Enter") sendMessage(); });
+    btnClose.addEventListener("click", () => { try { window.close(); } catch {} if (!window.closed) history.back(); });
+    btnMin.addEventListener("click", () => {
+      const app = document.querySelector(".app"); const isMini = app.dataset.mini === "1"; app.dataset.mini = isMini ? "0" : "1";
+      if (!isMini){ app.style.gridTemplateColumns = "1fr"; document.querySelector(".side").style.display = "none"; document.querySelector(".tabs").style.display = "none"; messages.style.display = "none"; typing.style.display = "none"; document.querySelector(".controls").style.display = "none"; document.querySelector(".settings").style.display = "none"; btnMin.textContent = "+"; }
+      else { app.style.gridTemplateColumns = ""; document.querySelector(".side").style.display = ""; document.querySelector(".tabs").style.display = ""; messages.style.display = ""; typing.style.display = ""; document.querySelector(".controls").style.display = ""; document.querySelector(".settings").style.display = ""; btnMin.innerHTML = "&minus;"; }
     });
-  })();
-
-  // Init
-  tts.checked = !!cfg.ttsEnabled;
-  setAvatarState("idle");
-  addBubble(buildWelcomeMessage(), "bot");
-  setTimeout(() => input.focus(), 0);
-</script>
+    (function initVoice(){
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) return;
+      const rec = new SR();
+      rec.lang = cfg.lang || "es-MX";
+      rec.interimResults = false;
+      rec.onstart = () => { setAvatarState("listen"); mic.textContent = "Escuchando..."; };
+      rec.onend = () => { setAvatarState("idle"); mic.textContent = "Hablar"; };
+      rec.onerror = () => { setAvatarState("idle"); mic.textContent = "Hablar"; };
+      rec.onresult = (ev) => { const t = (ev.results && ev.results[0] && ev.results[0][0]) ? ev.results[0][0].transcript : ""; if (t){ input.value = t; sendMessage(); } };
+      mic.addEventListener("click", () => { try { rec.start(); } catch {} });
+    })();
+    tts.checked = !!cfg.ttsEnabled;
+    setAvatarState("idle");
+    addBubble(buildWelcomeMessage(), "bot");
+    setTimeout(() => input.focus(), 0);
+  </script>
 </body>
 </html>
