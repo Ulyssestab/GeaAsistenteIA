@@ -11,8 +11,8 @@
     html,body{height:100%;margin:0;overflow:hidden}
     body{font-family:"Segoe UI",Tahoma,Geneva,Verdana,sans-serif;background:radial-gradient(circle at top left,rgba(196,154,82,.16),transparent 28%),linear-gradient(135deg,#f8f4f0,#efe5db 48%,#f8f4f0);color:var(--gea-ink)}
     .page-shell{min-height:100dvh;padding:1rem}
-    .app{display:grid;grid-template-columns:minmax(420px,.96fr) minmax(520px,1.12fr);width:min(1540px,100%);min-height:calc(100dvh - 2rem);max-height:calc(100dvh - 2rem);margin:0 auto;overflow:hidden;border:1px solid rgba(45,55,122,.12);border-radius:28px;background:rgba(255,255,255,.84);box-shadow:0 28px 60px rgba(53,36,26,.16);backdrop-filter:blur(12px)}
-    .side{position:relative;display:flex;flex-direction:column;justify-content:space-between;min-height:0;padding:1.35rem 1.35rem 0;overflow:hidden;background:#2D377A;color:#fff}
+    .app{display:grid;grid-template-columns:minmax(420px,.96fr) minmax(520px,1.12fr);align-items:stretch;width:min(1540px,100%);min-height:calc(100dvh - 2rem);height:calc(100dvh - 2rem);max-height:calc(100dvh - 2rem);margin:0 auto;overflow:hidden;border:1px solid rgba(45,55,122,.12);border-radius:28px;background:rgba(255,255,255,.84);box-shadow:0 28px 60px rgba(53,36,26,.16);backdrop-filter:blur(12px)}
+    .side{position:sticky;top:0;display:flex;flex-direction:column;justify-content:space-between;min-height:0;height:100%;padding:1.35rem 1.35rem 0;overflow:hidden;background:#2D377A;color:#fff}
     .side::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 15% 18%,rgba(255,255,255,.12),transparent 24%),linear-gradient(155deg,rgba(196,154,82,.18),transparent 45%)}
     .side-copy,.avatar-stage{position:relative;z-index:1}
     .gov-mark{display:flex;align-items:center;gap:1rem;margin-bottom:1rem}.side-copy--minimal{display:flex;justify-content:flex-start;align-items:flex-start}.gov-mark--solo{padding:.8rem 1rem;border-radius:22px;border:1px solid rgba(255,255,255,.14);background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.06));backdrop-filter:blur(8px)}
@@ -27,12 +27,12 @@
     .service-grid{display:none}
     .service-item{display:none}
     .service-item strong{display:block;margin-bottom:.25rem;font-size:.95rem}
-    .avatar-stage{position:relative;display:flex;align-items:flex-end;justify-content:center;flex:1 1 auto;min-height:460px;padding:0 .75rem .25rem}
+    .avatar-stage{position:relative;display:flex;align-items:flex-end;justify-content:center;flex:1 1 auto;min-height:460px;max-height:100%;padding:0 .75rem .25rem;overflow:hidden}
     .avatar-stage::before{content:"";position:absolute;inset:2% 0 4%;background-image:var(--ania-stage-bg, url("assets/img/fondo.png"));background-position:center 52%;background-size:contain;background-repeat:no-repeat;opacity:.98;filter:drop-shadow(0 18px 34px rgba(0,0,0,.24))}
     .avatar-stage::after{content:"";position:absolute;left:10%;right:10%;bottom:0;height:110px;background:radial-gradient(circle,rgba(0,0,0,.34),rgba(0,0,0,0) 70%);opacity:.45;filter:blur(8px)}
     .side img#sideAvatar{position:relative;z-index:1;width:min(100%,640px);max-height:100%;height:auto;object-fit:contain;object-position:center bottom;filter:drop-shadow(0 18px 30px rgba(0,0,0,.22));animation:floaty 3.4s ease-in-out infinite}
     @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
-    .chatcol{display:grid;grid-template-rows:auto auto 1fr auto auto;min-width:0;min-height:0;overflow:hidden;background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(250,247,244,.95))}
+    .chatcol{display:grid;grid-template-rows:auto auto auto minmax(0,1fr) auto auto auto;min-width:0;min-height:0;height:100%;max-height:100%;overflow:hidden;background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(250,247,244,.95))}
     .header{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1.1rem 1.35rem;border-bottom:1px solid rgba(45,55,122,.1);background:linear-gradient(180deg,#fff,rgba(249,246,243,.98))}
     .header-brand{display:flex;align-items:center;gap:1rem;min-width:0}
     .header-logo{width:62px;height:62px;padding:.75rem;border-radius:20px;background:linear-gradient(180deg,#fff,#f3ece6);border:1px solid rgba(45,55,122,.08);box-shadow:0 12px 24px rgba(41,25,19,.08)}
@@ -50,7 +50,7 @@
     .tab-actions{display:flex;gap:.65rem;flex-wrap:nowrap;flex:0 0 auto}
     .tab{min-width:132px;height:44px;padding:0 1.15rem;border-radius:999px;border:1px solid rgba(45,55,122,.14);background:#fff;color:var(--gea-primary);font-weight:700;flex:0 0 auto}
     .tab.active{background:linear-gradient(180deg,var(--gea-primary),var(--gea-primary-dark));border-color:transparent;color:#fff;box-shadow:0 10px 20px rgba(45,55,122,.22)}
-    .messages{padding:1.35rem 1.5rem;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-gutter:stable both-edges;background:linear-gradient(180deg,rgba(255,255,255,.35),rgba(255,255,255,0)),radial-gradient(circle at top right,rgba(196,154,82,.08),transparent 22%),#fcfbf9}
+    .messages{padding:1.35rem 1.5rem;min-height:0;height:100%;max-height:100%;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-gutter:stable both-edges;background:linear-gradient(180deg,rgba(255,255,255,.35),rgba(255,255,255,0)),radial-gradient(circle at top right,rgba(196,154,82,.08),transparent 22%),#fcfbf9}
     .bubble{max-width:88%;padding:1rem 1.05rem;margin:.75rem 0;border-radius:20px;border:1px solid transparent;box-shadow:0 12px 24px rgba(38,28,20,.06);line-height:1.55;font-size:.96rem;overflow-wrap:anywhere}
     .bot{background:#fff;border-color:rgba(45,55,122,.08);border-top-left-radius:.5rem}
     .me{margin-left:auto;background:#2D377A;color:#fff;border-top-right-radius:.5rem}
@@ -73,9 +73,37 @@
     .settings{display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:.95rem 1.5rem 1.1rem;border-top:1px solid var(--gea-line);font-size:.88rem;background:linear-gradient(180deg,rgba(247,241,236,.95),rgba(244,238,232,.98))}
     .settings label{display:flex;align-items:center;gap:.6rem;color:var(--gea-ink);font-weight:600}
     .settings input[type="checkbox"]{width:1.05rem;height:1.05rem;accent-color:var(--gea-primary)}
+
+    .call-panel{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1rem 1.5rem;border-bottom:1px solid var(--gea-line);background:linear-gradient(180deg,rgba(45,55,122,.04),rgba(255,255,255,.7))}
+    .call-meta{display:flex;align-items:center;gap:.9rem;min-width:0}
+    .call-badge{width:48px;height:48px;border-radius:16px;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,var(--gea-primary),var(--gea-primary-dark));color:#fff;font-size:1.25rem;box-shadow:0 12px 22px rgba(45,55,122,.22)}
+    .call-copy strong{display:block;font-size:1rem;color:var(--gea-ink)}
+    .call-copy span{display:block;color:var(--gea-muted);font-size:.9rem}
+    .call-status{display:flex;align-items:center;gap:.65rem;color:var(--gea-muted);font-size:.88rem}
+    .call-dot{width:.72rem;height:.72rem;border-radius:999px;background:#d97706;box-shadow:0 0 0 .25rem rgba(217,119,6,.16)}
+    .call-actions{display:flex;gap:.75rem;align-items:center}
+    .call-btn{min-width:190px;height:50px;padding:0 1.35rem;border-radius:999px;border:0;font-weight:700;box-shadow:0 12px 22px rgba(45,55,122,.22)}
+    .call-btn.primary{background:linear-gradient(180deg,var(--gea-primary),var(--gea-primary-dark));color:#fff}
+    .call-btn.secondary{background:#fff;color:var(--gea-primary);border:1px solid rgba(45,55,122,.14);box-shadow:none}
+    .call-timer{display:none;padding:.5rem .85rem;border-radius:999px;background:#fff;border:1px solid rgba(45,55,122,.12);font-weight:700;color:var(--gea-primary)}
+    .call-timer.show{display:inline-flex;align-items:center}
+    body.call-active .call-dot{background:#24a56d;box-shadow:0 0 0 .25rem rgba(36,165,109,.16)}
+    .live-panel{display:none;gap:.9rem;align-items:flex-start;padding:.9rem 1.5rem;border-bottom:1px solid var(--gea-line);background:rgba(45,55,122,.035)}
+    .live-panel.show{display:flex}
+    .live-wave{width:42px;height:42px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#eef1ff,#ffffff);border:1px solid rgba(45,55,122,.10);color:var(--gea-primary);font-size:1.05rem;flex:0 0 auto}
+    .live-copy{min-width:0;flex:1 1 auto}
+    .live-label{display:flex;align-items:center;gap:.55rem;font-size:.82rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--gea-primary)}
+    .live-pulse{width:.55rem;height:.55rem;border-radius:999px;background:#24a56d;box-shadow:0 0 0 0 rgba(36,165,109,.34);animation:livePulse 1.5s infinite}
+    .live-text{margin-top:.35rem;min-height:1.55rem;color:var(--gea-ink);font-size:.96rem;line-height:1.45;word-break:break-word}
+    .messages::-webkit-scrollbar{width:12px}
+    .messages::-webkit-scrollbar-track{background:rgba(45,55,122,.06);border-radius:999px}
+    .messages::-webkit-scrollbar-thumb{background:rgba(45,55,122,.28);border-radius:999px;border:3px solid rgba(255,255,255,.75)}
+    .messages::-webkit-scrollbar-thumb:hover{background:rgba(45,55,122,.4)}
+    .live-text.muted{color:var(--gea-muted)}
+    @keyframes livePulse{0%{box-shadow:0 0 0 0 rgba(36,165,109,.32)}70%{box-shadow:0 0 0 .55rem rgba(36,165,109,0)}100%{box-shadow:0 0 0 0 rgba(36,165,109,0)}}
     @media (max-width:1199px){.app{grid-template-columns:minmax(360px,.9fr) minmax(480px,1.1fr)}}
-    @media (max-width:991px){html,body,body{overflow:auto}.page-shell{padding:.75rem}.app{grid-template-columns:1fr;grid-template-rows:minmax(300px,40vh) 1fr;min-height:calc(100dvh - 1.5rem);max-height:none;border-radius:24px}.side{padding:1rem 1rem 0}.avatar-stage{min-height:260px}.header,.tabs,.messages,.typing,.controls,.settings{padding-left:1rem;padding-right:1rem}.tabs-copy{min-width:0}.tabs-copy span{display:block}}
-    @media (max-width:640px){.header{align-items:flex-start}.header-logo{width:54px;height:54px;padding:.6rem}.title{font-size:1.12rem}.subtitle{font-size:.84rem}.tabs{flex-direction:column;align-items:stretch}.tab-actions{width:100%;justify-content:stretch}.tab{flex:1 1 0;min-width:0}.composer-row,.settings{flex-direction:column;align-items:stretch}.send,.mic{text-align:center;justify-content:center}.gov-mark--solo{width:100%}.gov-mark h1{font-size:1rem}}
+    @media (max-width:991px){html,body,body{overflow:auto}.page-shell{padding:.75rem}.app{grid-template-columns:1fr;grid-template-rows:minmax(300px,40vh) 1fr;min-height:calc(100dvh - 1.5rem);height:auto;max-height:none;border-radius:24px}.side{position:relative;padding:1rem 1rem 0}.avatar-stage{min-height:260px}.header,.tabs,.messages,.typing,.controls,.settings{padding-left:1rem;padding-right:1rem}.tabs-copy{min-width:0}.tabs-copy span{display:block}}
+    @media (max-width:640px){.header{align-items:flex-start}.header-logo{width:54px;height:54px;padding:.6rem}.title{font-size:1.12rem}.subtitle{font-size:.84rem}.tabs{flex-direction:column;align-items:stretch}.tab-actions{width:100%;justify-content:stretch}.tab{flex:1 1 0;min-width:0}.composer-row,.settings,.call-panel,.call-actions{flex-direction:column;align-items:stretch}.send,.mic,.call-btn{text-align:center;justify-content:center;width:100%}.gov-mark--solo{width:100%}.gov-mark h1{font-size:1rem}}
   </style>
 </head>
 <body>
@@ -110,14 +138,31 @@
             <button class="btn" id="btnClose" type="button" title="Cerrar">&times;</button>
           </div>
         </div>
-        <div class="tabs">
-          <div class="tabs-copy">
-            <strong>Canal de atencion</strong>
-            <span>Selecciona la forma en la que deseas interactuar con Ania.</span>
+
+        <div class="call-panel" id="callPanel">
+          <div class="call-meta">
+            <div class="call-badge">☎</div>
+            <div class="call-copy">
+              <strong>Llamada por voz con Ania</strong>
+              <span id="callSubtitle">Pulsa iniciar llamada para activar el micrófono y comenzar la atención por voz.</span>
+            </div>
           </div>
-          <div class="tab-actions">
-            <button class="tab active btn" id="tabText" type="button">Texto</button>
-            <button class="tab btn" id="tabVoice" type="button">Voz</button>
+          <div class="call-actions">
+            <div class="call-status">
+              <span class="call-dot" id="callDot"></span>
+              <span id="callStatus">Lista para atenderte</span>
+            </div>
+            <span class="call-timer" id="callTimer">00:00</span>
+            <button class="call-btn primary" id="startCallBtn" type="button">Iniciar llamada</button>
+            <button class="call-btn secondary" id="switchTextBtn" type="button">Continuar por texto</button>
+          </div>
+        </div>
+
+        <div class="live-panel" id="livePanel">
+          <div class="live-wave">🎙</div>
+          <div class="live-copy">
+            <div class="live-label"><span class="live-pulse"></span><span id="liveTranscriptStatus">Transcripción en vivo</span></div>
+            <div class="live-text muted" id="liveTranscriptText">Cuando la llamada esté activa, aquí aparecerá lo que vas diciendo en tiempo real.</div>
           </div>
         </div>
         <div class="messages" id="messages"></div>
@@ -126,13 +171,13 @@
           <span>Buscando informacion...</span>
         </div>
         <div class="controls">
-          <div class="composer-row" id="textRow">
+          <div class="composer-row" id="textRow" style="display:none;">
             <input class="input form-control" id="input" type="text" placeholder="Escribe tu mensaje aqui"/>
             <button class="send btn" id="send" type="button">Enviar consulta</button>
           </div>
-          <div class="voice" id="voiceBox">
-            <div class="voice-note">Pulsa el boton para dictar tu mensaje.</div>
-            <button class="mic btn" id="mic" type="button">Hablar</button>
+          <div class="voice show" id="voiceBox">
+            <div class="voice-note">Durante la llamada, Ania escuchará de forma continua, mostrará transcripción en vivo y enviará tu consulta cuando detecte una pausa natural.</div>
+            <button class="mic btn" id="mic" type="button">Reactivar escucha</button>
           </div>
         </div>
         <div class="settings">
@@ -218,14 +263,20 @@
     const typing = document.getElementById("typing");
     const input = document.getElementById("input");
     const send = document.getElementById("send");
-    const tabText = document.getElementById("tabText");
-    const tabVoice = document.getElementById("tabVoice");
     const textRow = document.getElementById("textRow");
     const voiceBox = document.getElementById("voiceBox");
     const mic = document.getElementById("mic");
     const tts = document.getElementById("tts");
     const btnClose = document.getElementById("btnClose");
     const btnMin = document.getElementById("btnMin");
+    const startCallBtn = document.getElementById("startCallBtn");
+    const switchTextBtn = document.getElementById("switchTextBtn");
+    const callStatus = document.getElementById("callStatus");
+    const callSubtitle = document.getElementById("callSubtitle");
+    const callTimer = document.getElementById("callTimer");
+    const livePanel = document.getElementById("livePanel");
+    const liveTranscriptStatus = document.getElementById("liveTranscriptStatus");
+    const liveTranscriptText = document.getElementById("liveTranscriptText");
     titleTxt.textContent = cfg.title;
     document.title = cfg.title + " | Gobierno del Estado de Aguascalientes";
     if (stageBgSources.length) document.documentElement.style.setProperty("--ania-stage-bg", 'url("' + stageBgSources[0].replace(/"/g, '\\"') + '")');
@@ -284,24 +335,43 @@
       return new Blob([new Uint8Array(byteNumbers)], { type: mimeType || "audio/mpeg" });
     }
     function playBlob(blob){
-      const url = URL.createObjectURL(blob); const audio = new Audio(url);
-      audio.onended = () => { URL.revokeObjectURL(url); setAvatarState("idle"); };
-      audio.onerror = () => { URL.revokeObjectURL(url); setAvatarState("idle"); };
-      audio.play().catch(() => setAvatarState("idle"));
+      return new Promise((resolve) => {
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        const done = () => { try { URL.revokeObjectURL(url); } catch {} setAvatarState("idle"); resolve(); };
+        audio.onended = done;
+        audio.onerror = done;
+        audio.play().catch(done);
+      });
+    }
+    function playAudioUrl(url){
+      return new Promise((resolve) => {
+        const audio = new Audio(url);
+        const done = () => { setAvatarState("idle"); resolve(); };
+        audio.onended = done;
+        audio.onerror = done;
+        audio.play().catch(done);
+      });
     }
     async function speak(text){
       text = (text || "").trim();
       if (!tts.checked || !text) return;
       if (cfg.ttsProvider === "browser" || !cfg.ttsUrl) {
         if (!("speechSynthesis" in window)) return;
-        try{
-          setAvatarState("talk");
-          const u = new SpeechSynthesisUtterance(text);
-          u.lang = cfg.lang || "es-MX";
-          u.onend = () => setAvatarState("idle");
-          u.onerror = () => setAvatarState("idle");
-          speechSynthesis.cancel(); speechSynthesis.speak(u);
-        } catch { setAvatarState("idle"); }
+        await new Promise((resolve) => {
+          try{
+            setAvatarState("talk");
+            const u = new SpeechSynthesisUtterance(text);
+            u.lang = cfg.lang || "es-MX";
+            u.onend = () => { setAvatarState("idle"); resolve(); };
+            u.onerror = () => { setAvatarState("idle"); resolve(); };
+            speechSynthesis.cancel();
+            speechSynthesis.speak(u);
+          } catch {
+            setAvatarState("idle");
+            resolve();
+          }
+        });
         return;
       }
       try{
@@ -311,11 +381,11 @@
         const ct = (res.headers.get("content-type") || "").toLowerCase();
         if (ct.includes("application/json")){
           const data = await res.json();
-          if (data.audioBase64 || data.audio){ playBlob(b64ToBlob(data.audioBase64 || data.audio, data.mimeType || "audio/mpeg")); return; }
-          if (data.url){ const audio = new Audio(data.url); audio.onended = () => setAvatarState("idle"); audio.onerror = () => setAvatarState("idle"); await audio.play().catch(() => setAvatarState("idle")); return; }
+          if (data.audioBase64 || data.audio){ await playBlob(b64ToBlob(data.audioBase64 || data.audio, data.mimeType || "audio/mpeg")); return; }
+          if (data.url){ await playAudioUrl(data.url); return; }
           setAvatarState("idle"); return;
         }
-        playBlob(await res.blob());
+        await playBlob(await res.blob());
       } catch { setAvatarState("idle"); }
     }
     let pendingMenu = null;
@@ -330,6 +400,77 @@
       const label = map[String(opt)] || "Atencion ciudadana";
       return "Opcion " + opt + " (" + label + "). Mensaje del ciudadano: " + userText;
     }
+
+    let callStartedAt = null;
+    let callTimerId = null;
+    function formatCallTime(totalSeconds){
+      const min = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
+      const sec = String(totalSeconds % 60).padStart(2, "0");
+      return min + ":" + sec;
+    }
+    function updateCallTimer(){
+      if (!callStartedAt) return;
+      const secs = Math.max(0, Math.floor((Date.now() - callStartedAt) / 1000));
+      callTimer.textContent = formatCallTime(secs);
+    }
+    function startCallVisualState(){
+      document.body.classList.add("call-active");
+      callStartedAt = Date.now();
+      updateCallTimer();
+      callTimer.classList.add("show");
+      if (callTimerId) clearInterval(callTimerId);
+      callTimerId = setInterval(updateCallTimer, 1000);
+      callStatus.textContent = "Llamada activa";
+      callSubtitle.textContent = "Habla con naturalidad. Mientras la llamada este activa, Ania seguira escuchando automaticamente.";
+      startCallBtn.textContent = "Finalizar llamada";
+      startCallBtn.disabled = false;
+    }
+    function stopCallVisualState(){
+      document.body.classList.remove("call-active");
+      if (callTimerId) clearInterval(callTimerId);
+      callTimerId = null;
+      callStartedAt = null;
+      callTimer.classList.remove("show");
+      callTimer.textContent = "00:00";
+      callStatus.textContent = "Lista para atenderte";
+      callSubtitle.textContent = "Pulsa iniciar llamada para activar el micrófono y comenzar la atencion por voz.";
+      startCallBtn.textContent = "Iniciar llamada";
+      startCallBtn.disabled = false;
+      livePanel.classList.remove("show");
+      liveTranscriptStatus.textContent = "Transcripción en vivo";
+      liveTranscriptText.textContent = "Cuando la llamada esté activa, aquí aparecerá lo que vas diciendo en tiempo real.";
+      liveTranscriptText.classList.add("muted");
+    }
+    function showLivePanel(){
+      livePanel.classList.add("show");
+    }
+    function setLiveTranscript(status, textValue, muted){
+      if (status) liveTranscriptStatus.textContent = status;
+      if (typeof textValue === "string") liveTranscriptText.textContent = textValue;
+      liveTranscriptText.classList.toggle("muted", !!muted);
+    }
+    async function ensureMicrophonePermission(){
+      if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) throw new Error("Micrófono no disponible");
+      const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
+      stream.getTracks().forEach(t => t.stop());
+      return true;
+    }
+    async function beginVoiceCall(){
+      callStatus.textContent = "Solicitando acceso al micrófono...";
+      callSubtitle.textContent = "Autoriza el uso del micrófono para comenzar la llamada con Ania.";
+      try{
+        await ensureMicrophonePermission();
+        startCallVisualState();
+        showLivePanel();
+        setLiveTranscript("Llamada activa", "Micrófono activo. Puedes comenzar a hablar cuando quieras.", true);
+        addBubble("Hola, soy Ania, asistente virtual del Gobierno del Estado de Aguascalientes. Ya podemos hablar por voz. ¿En qué puedo ayudarte hoy?", "bot");
+        speak("Hola, soy Ania, asistente virtual del Gobierno del Estado de Aguascalientes. Ya podemos hablar por voz. ¿En qué puedo ayudarte hoy?");
+      } catch (err) {
+        stopCallVisualState();
+        addBubble("No se pudo activar el micrófono. Puedes intentarlo de nuevo o continuar por texto.", "bot");
+      }
+    }
+
     function handleMenuInput(raw){
       const t = (raw || "").trim(); const low = t.toLowerCase();
       if (low === "menu" || low === "men\u00fa" || low === "opciones" || low === "ayuda") { addBubble(buildMainMenu(), "bot"); setAvatarState("idle"); return true; }
@@ -351,30 +492,200 @@
       try{ const answer = await callApi(toSend); setTyping(false); addBubble(answer, "bot"); const speechText = toSpeechText(answer); if (speechText) speak(speechText); }
       catch { setTyping(false); addBubble("Ocurrio un error al consultar la informacion. Intenta de nuevo.", "bot"); }
     }
-    tabText.addEventListener("click", () => { tabText.classList.add("active"); tabVoice.classList.remove("active"); textRow.style.display = "flex"; voiceBox.classList.remove("show"); input.focus(); setAvatarState("idle"); });
-    tabVoice.addEventListener("click", () => { tabVoice.classList.add("active"); tabText.classList.remove("active"); textRow.style.display = "none"; voiceBox.classList.add("show"); setAvatarState("idle"); });
+    startCallBtn.addEventListener("click", () => { if (document.body.classList.contains("call-active")) { stopCallVisualState(); addBubble("La llamada por voz ha finalizado. Si lo deseas, puedes iniciar una nueva llamada o continuar por texto.", "bot"); } else { beginVoiceCall(); } });
+    switchTextBtn.addEventListener("click", () => { textRow.style.display = "flex"; voiceBox.classList.remove("show"); input.focus(); callSubtitle.textContent = "Atencion por texto disponible. Puedes volver a la llamada cuando quieras."; });
     send.addEventListener("click", sendMessage);
     input.addEventListener("keydown", (e) => { if (e.key === "Enter") sendMessage(); });
     btnClose.addEventListener("click", () => { try { window.close(); } catch {} if (!window.closed) history.back(); });
     btnMin.addEventListener("click", () => {
       const app = document.querySelector(".app"); const isMini = app.dataset.mini === "1"; app.dataset.mini = isMini ? "0" : "1";
-      if (!isMini){ app.style.gridTemplateColumns = "1fr"; document.querySelector(".side").style.display = "none"; document.querySelector(".tabs").style.display = "none"; messages.style.display = "none"; typing.style.display = "none"; document.querySelector(".controls").style.display = "none"; document.querySelector(".settings").style.display = "none"; btnMin.textContent = "+"; }
-      else { app.style.gridTemplateColumns = ""; document.querySelector(".side").style.display = ""; document.querySelector(".tabs").style.display = ""; messages.style.display = ""; typing.style.display = ""; document.querySelector(".controls").style.display = ""; document.querySelector(".settings").style.display = ""; btnMin.innerHTML = "&minus;"; }
+      const side = document.querySelector(".side");
+      const controls = document.querySelector(".controls");
+      const settings = document.querySelector(".settings");
+      if (!isMini){ app.style.gridTemplateColumns = "1fr"; if (side) side.style.display = "none"; messages.style.display = "none"; typing.style.display = "none"; if (controls) controls.style.display = "none"; if (settings) settings.style.display = "none"; btnMin.textContent = "+"; }
+      else { app.style.gridTemplateColumns = ""; if (side) side.style.display = ""; messages.style.display = ""; typing.style.display = ""; if (controls) controls.style.display = ""; if (settings) settings.style.display = ""; btnMin.innerHTML = "&minus;"; }
     });
     (function initVoice(){
       const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SR) return;
+      if (!SR) {
+        livePanel.classList.add("show");
+        setLiveTranscript("Transcripción no disponible", "Este navegador no soporta reconocimiento de voz del navegador. Puedes continuar por texto.", true);
+        return;
+      }
       const rec = new SR();
+      let callListening = false;
+      let isSpeaking = false;
+      let isRecognitionActive = false;
+      let restartWanted = false;
+      let finalBuffer = "";
+      let interimBuffer = "";
+      let silenceCommitTimer = null;
+      let lastDeliveredText = "";
       rec.lang = cfg.lang || "es-MX";
-      rec.interimResults = false;
-      rec.onstart = () => { setAvatarState("listen"); mic.textContent = "Escuchando..."; };
-      rec.onend = () => { setAvatarState("idle"); mic.textContent = "Hablar"; };
-      rec.onerror = () => { setAvatarState("idle"); mic.textContent = "Hablar"; };
-      rec.onresult = (ev) => { const t = (ev.results && ev.results[0] && ev.results[0][0]) ? ev.results[0][0].transcript : ""; if (t){ input.value = t; sendMessage(); } };
-      mic.addEventListener("click", () => { try { rec.start(); } catch {} });
+      rec.interimResults = true;
+      rec.continuous = true;
+
+      const originalSpeak = speak;
+      speak = async function(text){
+        isSpeaking = true;
+        restartWanted = callListening && document.body.classList.contains("call-active");
+        clearTimeout(silenceCommitTimer);
+        try { if (isRecognitionActive) rec.stop(); } catch {}
+        try {
+          setLiveTranscript("Ania está hablando", "Esperando a que termine la respuesta para volver a escucharte...", true);
+          await originalSpeak(text);
+        } finally {
+          isSpeaking = false;
+          if (restartWanted && document.body.classList.contains("call-active")) {
+            setTimeout(startContinuousRecognition, 450);
+          }
+        }
+      };
+
+      function normalizeRecognizedText(value){
+        return String(value || "").replace(/\s+/g, " ").trim();
+      }
+      function clearRecognitionBuffers(){
+        finalBuffer = "";
+        interimBuffer = "";
+        clearTimeout(silenceCommitTimer);
+      }
+      function updateLiveTranscript(){
+        const combined = normalizeRecognizedText([finalBuffer, interimBuffer].filter(Boolean).join(" "));
+        if (!document.body.classList.contains("call-active")) return;
+        showLivePanel();
+        if (combined) {
+          setLiveTranscript("Transcripción en vivo", combined, false);
+        } else {
+          setLiveTranscript("Llamada activa", "Micrófono activo. Puedes comenzar a hablar cuando quieras.", true);
+        }
+      }
+      async function commitRecognizedText(force){
+        clearTimeout(silenceCommitTimer);
+        const combined = normalizeRecognizedText([finalBuffer, interimBuffer].filter(Boolean).join(" "));
+        if (!combined) {
+          updateLiveTranscript();
+          return;
+        }
+        if (!force && combined.length < 2) return;
+        if (combined === lastDeliveredText) {
+          clearRecognitionBuffers();
+          updateLiveTranscript();
+          return;
+        }
+        lastDeliveredText = combined;
+        input.value = combined;
+        clearRecognitionBuffers();
+        callStatus.textContent = "Procesando tu consulta";
+        setLiveTranscript("Consulta detectada", combined, false);
+        await sendMessage();
+      }
+      function queueCommit(){
+        clearTimeout(silenceCommitTimer);
+        silenceCommitTimer = setTimeout(() => { commitRecognizedText(true); }, 950);
+      }
+      function startContinuousRecognition(){
+        if (!document.body.classList.contains("call-active") || isSpeaking || isRecognitionActive) return;
+        try {
+          restartWanted = true;
+          rec.start();
+        } catch {}
+      }
+      function stopContinuousRecognition(){
+        callListening = false;
+        restartWanted = false;
+        clearRecognitionBuffers();
+        try { if (isRecognitionActive) rec.stop(); } catch {}
+      }
+
+      rec.onstart = () => {
+        isRecognitionActive = true;
+        setAvatarState("listen");
+        if (document.body.classList.contains("call-active")) {
+          callStatus.textContent = "Escuchando";
+          mic.textContent = "Escucha activa";
+          showLivePanel();
+          updateLiveTranscript();
+        } else {
+          mic.textContent = "Escuchando...";
+        }
+      };
+      rec.onend = () => {
+        isRecognitionActive = false;
+        setAvatarState("idle");
+        if (document.body.classList.contains("call-active") && callListening && !isSpeaking) {
+          callStatus.textContent = "Llamada activa";
+          mic.textContent = "Reactivar escucha";
+          if (finalBuffer || interimBuffer) queueCommit();
+          setTimeout(startContinuousRecognition, 400);
+        } else {
+          mic.textContent = "Reactivar escucha";
+        }
+      };
+      rec.onerror = (ev) => {
+        isRecognitionActive = false;
+        setAvatarState("idle");
+        if (document.body.classList.contains("call-active")) {
+          const err = (ev && ev.error) ? String(ev.error) : "error";
+          if (err === "not-allowed" || err === "service-not-allowed") {
+            setLiveTranscript("Micrófono bloqueado", "El navegador no permitió usar el micrófono. Revisa el permiso del sitio y vuelve a iniciar la llamada.", true);
+            callStatus.textContent = "Micrófono no disponible";
+            return;
+          }
+          setLiveTranscript("Reconectando audio", "Se perdió momentáneamente la escucha. Intentando reactivar el micrófono...", true);
+          if (callListening && !isSpeaking) setTimeout(startContinuousRecognition, 900);
+        }
+      };
+      rec.onresult = (ev) => {
+        let interim = "";
+        let finals = [];
+        for (let i = ev.resultIndex; i < ev.results.length; i++) {
+          const result = ev.results[i];
+          const transcript = normalizeRecognizedText(result[0] && result[0].transcript ? result[0].transcript : "");
+          if (!transcript) continue;
+          if (result.isFinal) finals.push(transcript);
+          else interim += (interim ? " " : "") + transcript;
+        }
+        if (finals.length) finalBuffer = normalizeRecognizedText([finalBuffer].concat(finals).join(" "));
+        interimBuffer = normalizeRecognizedText(interim);
+        updateLiveTranscript();
+        if (finals.length) queueCommit();
+      };
+
+      const originalBeginVoiceCall = beginVoiceCall;
+      beginVoiceCall = async function(){
+        await originalBeginVoiceCall();
+        if (document.body.classList.contains("call-active")) {
+          callListening = true;
+          restartWanted = true;
+          mic.textContent = "Escucha activa";
+          setTimeout(startContinuousRecognition, 700);
+        }
+      };
+
+      const originalStopCallVisualState = stopCallVisualState;
+      stopCallVisualState = function(){
+        stopContinuousRecognition();
+        originalStopCallVisualState();
+        mic.textContent = "Reactivar escucha";
+      };
+
+      mic.addEventListener("click", async () => {
+        if (!document.body.classList.contains("call-active")) {
+          await beginVoiceCall();
+          return;
+        }
+        callListening = true;
+        restartWanted = true;
+        setLiveTranscript("Reactivando escucha", "Volviendo a activar el micrófono para continuar la llamada...", true);
+        startContinuousRecognition();
+      });
     })();
     tts.checked = !!cfg.ttsEnabled;
     setAvatarState("idle");
+    stopCallVisualState();
+    textRow.style.display = "none";
+    voiceBox.classList.add("show");
     addBubble(buildWelcomeMessage(), "bot");
     setTimeout(() => input.focus(), 0);
   </script>

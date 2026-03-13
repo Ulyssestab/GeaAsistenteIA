@@ -1,6 +1,6 @@
 /*! 
  * demo.js
- * Lanzador que abre ventana-demo(_sin-azure).html en otra pestaña (_blank)
+ * Lanzador que abre asistente_GEA.html en otra pestaña (_blank)
  * Corregido para tomar SIEMPRE el Eleven Voice ID actual y usar ElevenLabs por defecto.
  */
 (function () {
@@ -74,7 +74,7 @@
 
     return {
       // Si el input está vacío, usar la versión sin-azure por defecto.
-      windowUrl: val(ui.windowUrl, "./ventana-demo_sin-azure.html"),
+      windowUrl: val(ui.windowUrl, "./asistente_GEA.html"),
       title: val(ui.title, "Asistente"),
 
       avatar: val(ui.avatarIdle, ""),
