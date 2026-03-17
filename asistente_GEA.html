@@ -32,7 +32,7 @@
     .avatar-stage::after{content:"";position:absolute;left:10%;right:10%;bottom:0;height:110px;background:radial-gradient(circle,rgba(0,0,0,.34),rgba(0,0,0,0) 70%);opacity:.45;filter:blur(8px)}
     .side img#sideAvatar{position:relative;z-index:1;width:min(100%,640px);max-height:100%;height:auto;object-fit:contain;object-position:center bottom;filter:drop-shadow(0 18px 30px rgba(0,0,0,.22));animation:floaty 3.4s ease-in-out infinite}
     @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
-    .chatcol{display:grid;grid-template-rows:auto auto auto minmax(0,1fr) auto auto auto;min-width:0;min-height:0;height:100%;max-height:100%;overflow:hidden;background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(250,247,244,.95))}
+    .chatcol{display:grid;grid-template-rows:auto auto auto minmax(0,1fr) auto auto;min-width:0;min-height:0;height:100%;max-height:100%;overflow:hidden;background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(250,247,244,.95));}
     .header{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1.1rem 1.35rem;border-bottom:1px solid rgba(45,55,122,.1);background:linear-gradient(180deg,#fff,rgba(249,246,243,.98))}
     .header-brand{display:flex;align-items:center;gap:1rem;min-width:0}
     .header-logo{width:62px;height:62px;padding:.75rem;border-radius:20px;background:linear-gradient(180deg,#fff,#f3ece6);border:1px solid rgba(45,55,122,.08);box-shadow:0 12px 24px rgba(41,25,19,.08)}
@@ -50,7 +50,7 @@
     .tab-actions{display:flex;gap:.65rem;flex-wrap:nowrap;flex:0 0 auto}
     .tab{min-width:132px;height:44px;padding:0 1.15rem;border-radius:999px;border:1px solid rgba(45,55,122,.14);background:#fff;color:var(--gea-primary);font-weight:700;flex:0 0 auto}
     .tab.active{background:linear-gradient(180deg,var(--gea-primary),var(--gea-primary-dark));border-color:transparent;color:#fff;box-shadow:0 10px 20px rgba(45,55,122,.22)}
-    .messages{padding:1.35rem 1.5rem;min-height:0;height:100%;max-height:100%;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-gutter:stable both-edges;background:linear-gradient(180deg,rgba(255,255,255,.35),rgba(255,255,255,0)),radial-gradient(circle at top right,rgba(196,154,82,.08),transparent 22%),#fcfbf9}
+    .messages{padding:1.35rem 1.5rem 2.25rem;min-height:0;height:auto;max-height:none;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-gutter:stable both-edges;scroll-padding-bottom:7rem;background:linear-gradient(180deg,rgba(255,255,255,.35),rgba(255,255,255,0)),radial-gradient(circle at top right,rgba(196,154,82,.08),transparent 22%),#fcfbf9;}
     .bubble{max-width:88%;padding:1rem 1.05rem;margin:.75rem 0;border-radius:20px;border:1px solid transparent;box-shadow:0 12px 24px rgba(38,28,20,.06);line-height:1.55;font-size:.96rem;overflow-wrap:anywhere}
     .bot{background:#fff;border-color:rgba(45,55,122,.08);border-top-left-radius:.5rem}
     .me{margin-left:auto;background:#2D377A;color:#fff;border-top-right-radius:.5rem}
@@ -62,15 +62,17 @@
     .dots span{width:.42rem;height:.42rem;border-radius:999px;background:var(--gea-primary);animation:dots 1.2s infinite;opacity:.35}
     .dots span:nth-child(2){animation-delay:.2s}.dots span:nth-child(3){animation-delay:.4s}
     @keyframes dots{0%,100%{transform:translateY(0);opacity:.35}50%{transform:translateY(-4px);opacity:1}}
-    .controls{padding:1rem 1.5rem;border-top:1px solid var(--gea-line);background:rgba(255,255,255,.88)}
+    .bottom-shell{display:grid;grid-template-rows:auto auto;align-self:end;min-height:0;background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(244,238,232,.98));border-top:1px solid var(--gea-line);box-shadow:0 -8px 18px rgba(41,25,19,.04);position:relative;z-index:5}
+    .controls{flex:0 0 auto;padding:1rem 1.5rem .75rem;border-top:0;background:transparent;}
     .composer-row{display:flex;gap:.85rem;align-items:center}
     .input{height:50px;border-radius:16px;border:1px solid rgba(45,55,122,.14);padding:0 1rem;background:#fff}
     .input:focus{border-color:rgba(45,55,122,.34);box-shadow:0 0 0 .25rem rgba(45,55,122,.12)}
     .send,.mic{height:50px;padding:0 1.25rem;border-radius:16px;font-weight:700;white-space:nowrap}
     .send{background:linear-gradient(180deg,var(--gea-primary),var(--gea-primary-dark));border:0;color:#fff;box-shadow:0 12px 22px rgba(45,55,122,.22)}
     .voice{display:none}.voice.show{display:block}
+    .voice-note{display:none !important}
     .mic{border:1px solid rgba(45,55,122,.14);background:#fff;color:var(--gea-primary)}
-    .settings{display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:.95rem 1.5rem 1.1rem;border-top:1px solid var(--gea-line);font-size:.88rem;background:linear-gradient(180deg,rgba(247,241,236,.95),rgba(244,238,232,.98))}
+    .settings{flex:0 0 auto;display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:.75rem 1.5rem 1rem;border-top:1px solid rgba(45,55,122,.08);font-size:.88rem;background:transparent;}
     .settings label{display:flex;align-items:center;gap:.6rem;color:var(--gea-ink);font-weight:600}
     .settings input[type="checkbox"]{width:1.05rem;height:1.05rem;accent-color:var(--gea-primary)}
 
@@ -88,7 +90,7 @@
     .call-timer{display:none;padding:.5rem .85rem;border-radius:999px;background:#fff;border:1px solid rgba(45,55,122,.12);font-weight:700;color:var(--gea-primary)}
     .call-timer.show{display:inline-flex;align-items:center}
     body.call-active .call-dot{background:#24a56d;box-shadow:0 0 0 .25rem rgba(36,165,109,.16)}
-    .live-panel{display:none;gap:.9rem;align-items:flex-start;padding:.9rem 1.5rem;border-bottom:1px solid var(--gea-line);background:rgba(45,55,122,.035)}
+    .live-panel{display:none !important;gap:.9rem;align-items:flex-start;padding:.9rem 1.5rem;border-bottom:1px solid var(--gea-line);background:rgba(45,55,122,.035)}
     .live-panel.show{display:flex}
     .live-wave{width:42px;height:42px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#eef1ff,#ffffff);border:1px solid rgba(45,55,122,.10);color:var(--gea-primary);font-size:1.05rem;flex:0 0 auto}
     .live-copy{min-width:0;flex:1 1 auto}
@@ -102,7 +104,7 @@
     .live-text.muted{color:var(--gea-muted)}
     @keyframes livePulse{0%{box-shadow:0 0 0 0 rgba(36,165,109,.32)}70%{box-shadow:0 0 0 .55rem rgba(36,165,109,0)}100%{box-shadow:0 0 0 0 rgba(36,165,109,0)}}
     @media (max-width:1199px){.app{grid-template-columns:minmax(360px,.9fr) minmax(480px,1.1fr)}}
-    @media (max-width:991px){html,body,body{overflow:auto}.page-shell{padding:.75rem}.app{grid-template-columns:1fr;grid-template-rows:minmax(300px,40vh) 1fr;min-height:calc(100dvh - 1.5rem);height:auto;max-height:none;border-radius:24px}.side{position:relative;padding:1rem 1rem 0}.avatar-stage{min-height:260px}.header,.tabs,.messages,.typing,.controls,.settings{padding-left:1rem;padding-right:1rem}.tabs-copy{min-width:0}.tabs-copy span{display:block}}
+    @media (max-width:991px){html,body,body{overflow:auto}.page-shell{padding:.75rem}.app{grid-template-columns:1fr;grid-template-rows:minmax(300px,40vh) 1fr;min-height:calc(100dvh - 1.5rem);height:auto;max-height:none;border-radius:24px}.side{position:relative;padding:1rem 1rem 0}.avatar-stage{min-height:260px}.header,.tabs,.messages,.typing,.controls,.settings{padding-left:1rem;padding-right:1rem}.bottom-shell{padding-bottom:max(.35rem, env(safe-area-inset-bottom))}.tabs-copy{min-width:0}.tabs-copy span{display:block}}
     @media (max-width:640px){.header{align-items:flex-start}.header-logo{width:54px;height:54px;padding:.6rem}.title{font-size:1.12rem}.subtitle{font-size:.84rem}.tabs{flex-direction:column;align-items:stretch}.tab-actions{width:100%;justify-content:stretch}.tab{flex:1 1 0;min-width:0}.composer-row,.settings,.call-panel,.call-actions{flex-direction:column;align-items:stretch}.send,.mic,.call-btn{text-align:center;justify-content:center;width:100%}.gov-mark--solo{width:100%}.gov-mark h1{font-size:1rem}}
   </style>
 </head>
@@ -170,19 +172,21 @@
           <div class="dots"><span></span><span></span><span></span></div>
           <span>Buscando informacion...</span>
         </div>
-        <div class="controls">
-          <div class="composer-row" id="textRow" style="display:none;">
-            <input class="input form-control" id="input" type="text" placeholder="Escribe tu mensaje aqui"/>
-            <button class="send btn" id="send" type="button">Enviar consulta</button>
+        <div class="bottom-shell">
+          <div class="controls">
+            <div class="composer-row" id="textRow" style="display:none;">
+              <input class="input form-control" id="input" type="text" placeholder="Escribe tu mensaje aqui"/>
+              <button class="send btn" id="send" type="button">Enviar consulta</button>
+            </div>
+            <div class="voice show" id="voiceBox" style="display:none;">
+              <div class="voice-note">Durante la llamada, Ania escuchará de forma continua, mostrará transcripción en vivo y enviará tu consulta cuando detecte una pausa natural.</div>
+              <button class="mic btn" id="mic" type="button">Reactivar escucha</button>
+            </div>
           </div>
-          <div class="voice show" id="voiceBox">
-            <div class="voice-note">Durante la llamada, Ania escuchará de forma continua, mostrará transcripción en vivo y enviará tu consulta cuando detecte una pausa natural.</div>
-            <button class="mic btn" id="mic" type="button">Reactivar escucha</button>
+          <div class="settings">
+            <label><input id="tts" type="checkbox"/>Responder con voz</label>
+            <span>Ventana independiente para orientacion ciudadana oficial.</span>
           </div>
-        </div>
-        <div class="settings">
-          <label><input id="tts" type="checkbox"/>Responder con voz</label>
-          <span>Ventana independiente para orientacion ciudadana oficial.</span>
         </div>
       </div>
     </div>
@@ -277,15 +281,6 @@
     const livePanel = document.getElementById("livePanel");
     const liveTranscriptStatus = document.getElementById("liveTranscriptStatus");
     const liveTranscriptText = document.getElementById("liveTranscriptText");
-    let currentAudio = null;
-    let currentAudioObjectUrl = "";
-    let currentSpeechUtterance = null;
-    let currentSpeechFinish = null;
-    let speechRunId = 0;
-    let microphoneStream = null;
-    let activeVoiceCallToken = 0;
-    let latestVoiceTurnId = 0;
-    let activeVoiceRequestController = null;
     titleTxt.textContent = cfg.title;
     document.title = cfg.title + " | Gobierno del Estado de Aguascalientes";
     if (stageBgSources.length) document.documentElement.style.setProperty("--ania-stage-bg", 'url("' + stageBgSources[0].replace(/"/g, '\\"') + '")');
@@ -319,159 +314,443 @@
       t = t.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/gi, "$1").replace(/https?:\/\/[^\s)]+/gi, "").replace(/[*_`~#>|]/g, " ").replace(/^\s*[-\u2022]\s+/gm, "").replace(/^\s*\d+\.\s+/gm, "").replace(/\s{2,}/g, " ").trim();
       return t.replace(/\r/g, "").replace(/\n{2,}/g, ". ").replace(/\n/g, ", ");
     }
+    function scrollMessagesToBottom(target){
+      const last = target || messages.lastElementChild;
+      if (!last) { messages.scrollTop = messages.scrollHeight; return; }
+
+      const placeLastBubble = () => {
+        const shell = document.querySelector(".bottom-shell");
+        const shellGap = shell ? shell.offsetHeight : 0;
+        const visibleHeight = Math.max(0, messages.clientHeight);
+        const bubbleTop = Math.max(0, last.offsetTop - 12);
+        const bubbleBottom = last.offsetTop + last.offsetHeight;
+        const desiredBottom = bubbleBottom - visibleHeight + 18;
+
+        if (last.offsetHeight > (visibleHeight * 0.72)) {
+          messages.scrollTop = bubbleTop;
+        } else {
+          messages.scrollTop = Math.max(bubbleTop, desiredBottom);
+        }
+
+        if (shellGap > 0) {
+          const maxScroll = Math.max(0, messages.scrollHeight - visibleHeight);
+          messages.scrollTop = Math.min(messages.scrollTop, maxScroll);
+        }
+      };
+
+      requestAnimationFrame(() => {
+        placeLastBubble();
+        setTimeout(placeLastBubble, 40);
+        setTimeout(placeLastBubble, 140);
+      });
+    }
     function addBubble(text, who){
       const div = document.createElement("div");
       div.className = "bubble " + (who === "me" ? "me" : "bot");
       if (who === "bot") div.innerHTML = renderBotHtml(text); else div.textContent = normalizeText(text);
       messages.appendChild(div);
-      requestAnimationFrame(() => { messages.scrollTop = messages.scrollHeight; });
+      scrollMessagesToBottom(div);
+      return div;
     }
-    function wait(ms, signal){
-      return new Promise((resolve, reject) => {
-        const timer = setTimeout(done, ms);
-        function cleanup(){
-          clearTimeout(timer);
-          if (signal) signal.removeEventListener("abort", onAbort);
-        }
-        function done(){
-          cleanup();
-          resolve();
-        }
-        function onAbort(){
-          cleanup();
-          reject(new DOMException("Aborted", "AbortError"));
-        }
-        if (signal) {
-          if (signal.aborted) {
-            onAbort();
-            return;
+    function updateBubble(el, text, who){
+      if (!el) return;
+      if (who === "bot") el.innerHTML = renderBotHtml(text); else el.textContent = normalizeText(text);
+      scrollMessagesToBottom(el);
+    }
+    function extractTextFromJsonChunk(data){
+      if (!data || typeof data !== "object") return "";
+      const value = data.output || data.answer || data.text || data.message || data.response || data.result || data.data || data.chunk || data.delta || "";
+      return (value == null ? "" : String(value));
+    }
+    function cleanStreamChunkLine(line){
+      let value = String(line || "").trim();
+      if (!value) return { type:"empty", text:"" };
+      if (/^data\s*:/i.test(value)) value = value.replace(/^data\s*:/i, "").trim();
+      if (!value) return { type:"empty", text:"" };
+      if (value === "[DONE]") return { type:"done", text:"" };
+      if (/^connection closed$/i.test(value)) return { type:"closed", text:"" };
+      if ((value.startsWith("{") && value.endsWith("}")) || (value.startsWith("[") && value.endsWith("]"))) {
+        try {
+          const parsed = JSON.parse(value);
+          const extracted = extractTextFromJsonChunk(parsed).trim();
+          if (!extracted) {
+            if (parsed.done === true || parsed.finished === true) return { type:"done", text:"" };
+            return { type:"meta", text:"" };
           }
-          signal.addEventListener("abort", onAbort, { once:true });
-        }
-      });
+          return { type:"text", text: extracted };
+        } catch(_) {}
+      }
+      return { type:"text", text: value };
     }
     async function parseApiResponse(res){
       const ct = (res.headers.get("content-type") || "").toLowerCase();
-      if (ct.includes("application/json")){ const data = await res.json(); return (data.output || data.answer || data.text || data.message || data.response || data.result || data.data || "").toString().trim(); }
-      const txt = (await res.text()).trim(); return txt || "";
+      if (ct.includes("application/json")){
+        const data = await res.json();
+        return (extractTextFromJsonChunk(data) || "").toString().trim();
+      }
+      const txt = (await res.text()).trim();
+      if (!txt) return "";
+      const lines = txt.split(/\r?\n/);
+
+
+      let parts = [];
+      for (const line of lines){
+        const parsed = cleanStreamChunkLine(line);
+        if (parsed.type === "done") break;
+        if (parsed.type === "text" && parsed.text) parts.push(parsed.text);
+      }
+      return parts.join(" ").replace(/\s{2,}/g, " ").trim() || txt;
     }
-    async function callApi(userText, signal){
-      if (!cfg.apiUrl){ await wait(350, signal); return "Recibi tu mensaje: " + userText; }
-      let res = await fetch(cfg.apiUrl, { method: "POST", headers: { "Content-Type":"application/json" }, body: JSON.stringify({ session: sessionId, input: userText }), signal });
-      if (!res.ok && (res.status === 400 || res.status === 415)){ res = await fetch(cfg.apiUrl, { method: "POST", headers: { "Content-Type":"application/json; charset=utf-8" }, body: JSON.stringify(userText), signal }); }
-      if (!res.ok) throw new Error("HTTP " + res.status);
-      const out = await parseApiResponse(res); return out || "Listo.";
+    async function callApi(userText, handlers){
+      handlers = handlers || {};
+      if (currentApiController){
+        try { currentApiController.abort(); } catch {}
+        currentApiController = null;
+      }
+      if (!cfg.apiUrl){
+        await new Promise(r => setTimeout(r, 350));
+        const fake = "Recibi tu mensaje: " + userText;
+        if (handlers.onChunk) handlers.onChunk(fake, fake);
+        if (handlers.onDone) handlers.onDone(fake);
+        return fake;
+      }
+      currentApiController = new AbortController();
+      let res;
+      try {
+        res = await fetch(cfg.apiUrl, { method: "POST", headers: { "Content-Type":"application/json" }, body: JSON.stringify({ session: sessionId, input: userText }), signal: currentApiController.signal });
+        if (!res.ok && (res.status === 400 || res.status === 415)){
+          res = await fetch(cfg.apiUrl, { method: "POST", headers: { "Content-Type":"application/json; charset=utf-8" }, body: JSON.stringify(userText), signal: currentApiController.signal });
+        }
+      } catch (err) {
+        if (err && err.name === "AbortError") throw err;
+        throw err;
+      }
+      if (!res.ok) {
+        currentApiController = null;
+        throw new Error("HTTP " + res.status);
+      }
+
+      const ct = (res.headers.get("content-type") || "").toLowerCase();
+      const canStream = !!(res.body && typeof res.body.getReader === "function" && !ct.includes("application/json"));
+      if (!canStream){
+        const out = await parseApiResponse(res);
+        currentApiController = null;
+        if (handlers.onChunk && out) handlers.onChunk(out, out);
+        if (handlers.onDone) handlers.onDone(out || "");
+        return out || "Listo.";
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+      let buffer = "";
+      let full = "";
+      let doneSeen = false;
+
+      try {
+        while (true){
+          const result = await reader.read();
+          if (result.done) break;
+
+          buffer += decoder.decode(result.value, { stream: true });
+          const lines = buffer.split(/\r?\n/);
+          buffer = lines.pop() || "";
+
+          for (const line of lines){
+            const parsed = cleanStreamChunkLine(line);
+            if (parsed.type === "done") {
+              doneSeen = true;
+              try { await reader.cancel(); } catch(_) {}
+              break;
+            }
+            if (parsed.type === "text" && parsed.text){
+              full += (full ? " " : "") + parsed.text;
+              if (handlers.onChunk) handlers.onChunk(parsed.text, full);
+            }
+          }
+          if (doneSeen) break;
+        }
+
+        if (!doneSeen){
+          buffer += decoder.decode();
+          const tailLines = buffer.split(/\r?\n/);
+          for (const line of tailLines){
+            const parsed = cleanStreamChunkLine(line);
+            if (parsed.type === "done") {
+              doneSeen = true;
+              break;
+            }
+            if (parsed.type === "text" && parsed.text){
+              full += (full ? " " : "") + parsed.text;
+              if (handlers.onChunk) handlers.onChunk(parsed.text, full);
+            }
+          }
+        }
+      } catch (err) {
+        if (!(err && err.name === "AbortError")) throw err;
+        throw err;
+      } finally {
+        currentApiController = null;
+      }
+
+      full = full.replace(/\s{2,}/g, " ").trim();
+      if (handlers.onDone) handlers.onDone(full || "");
+      return full || "Listo.";
     }
     function b64ToBlob(base64, mimeType){
       const clean = (base64 || "").split(",").pop(); const byteChars = atob(clean); const byteNumbers = new Array(byteChars.length);
       for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
       return new Blob([new Uint8Array(byteNumbers)], { type: mimeType || "audio/mpeg" });
     }
-    function cancelCurrentSpeech(invalidate){
-      if (invalidate !== false) speechRunId += 1;
-      const finish = currentSpeechFinish;
-      currentSpeechFinish = null;
-      const audio = currentAudio;
-      const audioUrl = currentAudioObjectUrl;
-      currentAudio = null;
-      currentAudioObjectUrl = "";
-      currentSpeechUtterance = null;
-      if (audio) {
-        audio.onended = null;
-        audio.onerror = null;
-        try { audio.pause(); } catch {}
-        try { audio.currentTime = 0; } catch {}
-      }
-      if ("speechSynthesis" in window) {
-        try { speechSynthesis.cancel(); } catch {}
-      }
-      if (audioUrl) {
-        try { URL.revokeObjectURL(audioUrl); } catch {}
-      }
-      setAvatarState("idle");
-      if (finish) finish();
+
+    let currentAudio = null;
+    let currentAudioUrl = null;
+    let speechGeneration = 0;
+    let activeSpeechToken = 0;
+    let browserUtterance = null;
+    let sharedMicStream = null;
+    let currentApiController = null;
+    let speechQueue = [];
+    let speechQueueRunning = false;
+    let streamedSpeechPrepared = "";
+    let assistantSpeakingState = false;
+
+    function setAssistantSpeaking(active){
+      const next = !!active;
+      if (assistantSpeakingState === next) return;
+      assistantSpeakingState = next;
+      try { window.dispatchEvent(new CustomEvent("ania-speaking-change", { detail:{ active: next } })); } catch {}
     }
-    function playAudioElement(audio, objectUrl){
+    function assistantIsTalking(){
+      return !!(assistantSpeakingState || speechQueueRunning || activeSpeechToken);
+    }
+    function cleanupCurrentAudio(){
+      if (currentAudio){
+        try { currentAudio.onended = null; currentAudio.onerror = null; currentAudio.onpause = null; } catch {}
+      }
+      if (currentAudioUrl){
+        try { URL.revokeObjectURL(currentAudioUrl); } catch {}
+      }
+      currentAudio = null;
+      currentAudioUrl = null;
+    }
+    function stopAssistantSpeech(reason){
+      speechGeneration += 1;
+      activeSpeechToken = 0;
+      speechQueue.length = 0;
+      speechQueueRunning = false;
+      streamedSpeechPrepared = "";
+      try {
+        if (currentAudio){
+          currentAudio.pause();
+          currentAudio.currentTime = 0;
+        }
+      } catch {}
+      cleanupCurrentAudio();
+      try {
+        if ("speechSynthesis" in window) speechSynthesis.cancel();
+      } catch {}
+      browserUtterance = null;
+      setAssistantSpeaking(false);
+      setAvatarState("idle");
+      return reason || "stopped";
+    }
+    function stopAssistantOutput(reason){
+      if (currentApiController){
+        try { currentApiController.abort(); } catch {}
+        currentApiController = null;
+      }
+      return stopAssistantSpeech(reason || "stopped");
+    }
+    function playManagedAudio(audio, objectUrl, token){
       return new Promise((resolve) => {
-        let settled = false;
-        const finish = () => {
-          if (settled) return;
-          settled = true;
-          if (currentSpeechFinish === finish) currentSpeechFinish = null;
-          if (currentAudio === audio) currentAudio = null;
-          currentSpeechUtterance = null;
-          if (currentAudioObjectUrl === objectUrl) currentAudioObjectUrl = "";
-          if (objectUrl) {
-            try { URL.revokeObjectURL(objectUrl); } catch {}
-          }
+        let finished = false;
+        currentAudio = audio;
+        currentAudioUrl = objectUrl || null;
+        const done = () => {
+          if (finished) return;
+          finished = true;
+          cleanupCurrentAudio();
+          if (activeSpeechToken === token) activeSpeechToken = 0;
           setAvatarState("idle");
           resolve();
         };
-        currentAudio = audio;
-        currentAudioObjectUrl = objectUrl || "";
-        currentSpeechFinish = finish;
-        audio.onended = finish;
-        audio.onerror = finish;
-        audio.play().catch(finish);
+        audio.onended = done;
+        audio.onerror = done;
+        audio.onpause = () => {
+          if (audio.ended) return;
+          if (token !== activeSpeechToken) done();
+        };
+        if (token !== activeSpeechToken) { done(); return; }
+        audio.play().catch(done);
       });
     }
-    function playBlob(blob){
+    function playBlob(blob, token){
       const url = URL.createObjectURL(blob);
-      return playAudioElement(new Audio(url), url);
+      const audio = new Audio(url);
+      return playManagedAudio(audio, url, token);
     }
-    function playAudioUrl(url){
-      return playAudioElement(new Audio(url), "");
+    function playAudioUrl(url, token){
+      const audio = new Audio(url);
+      return playManagedAudio(audio, null, token);
     }
-    async function speak(text){
-      text = (text || "").trim();
-      if (!tts.checked || !text) return;
-      const runId = ++speechRunId;
-      cancelCurrentSpeech(false);
+    function splitSpeechSegments(text){
+      const raw = String(text || "").trim();
+      if (!raw) return [];
+
+      const protectedText = raw
+        .replace(/\bAv\./g, "Av§")
+        .replace(/\bDr\./g, "Dr§")
+        .replace(/\bDra\./g, "Dra§")
+        .replace(/\bLic\./g, "Lic§")
+        .replace(/\bIng\./g, "Ing§")
+        .replace(/\bArq\./g, "Arq§")
+        .replace(/\bNo\./g, "No§")
+        .replace(/\bNúm\./g, "Núm§")
+        .replace(/\bC\.\s*P\./gi, "CP§")
+        .replace(/\bC\.P\./gi, "CP§")
+        .replace(/\bCol\./g, "Col§");
+
+      return protectedText
+        .match(/[^.!?\n]+(?:[.!?]+|$)/g)
+        ?.map(function(part){
+          return normalizeText(
+            part
+              .replace(/Av§/g, "Av.")
+              .replace(/Dr§/g, "Dr.")
+              .replace(/Dra§/g, "Dra.")
+              .replace(/Lic§/g, "Lic.")
+              .replace(/Ing§/g, "Ing.")
+              .replace(/Arq§/g, "Arq.")
+              .replace(/No§/g, "No.")
+              .replace(/Núm§/g, "Núm.")
+              .replace(/CP§/g, "C.P.")
+              .replace(/Col§/g, "Col.")
+          );
+        })
+        .filter(Boolean) || [];
+    }
+    function enqueueStreamedSpeech(fullText, isFinal){
+      if (!tts.checked) return;
+
+      const clean = toSpeechText(fullText || "");
+      if (!clean) return;
+
+      const complete = clean.match(/[^.!?\n]+[.!?]+/g) || [];
+      let preparedParts = complete.map(function(part){
+        return normalizeText(part);
+      }).filter(Boolean);
+
+      let preparedText = preparedParts.join(" ").trim();
+      const remainder = normalizeText(clean.slice(preparedText.length));
+
+      // Si todavía no es final, no hablar restos cortitos
+      if (!isFinal && remainder && remainder.length < 45) {
+        // todavía muy corto para sonar natural
+      } else if (isFinal && remainder) {
+        preparedParts.push(remainder);
+        preparedText = preparedParts.join(" ").trim();
+      }
+
+      if (!preparedText || preparedText === streamedSpeechPrepared) return;
+
+      let delta = preparedText.slice(streamedSpeechPrepared.length).trim();
+      if (!delta && preparedText.length > streamedSpeechPrepared.length) {
+        delta = preparedText.substring(streamedSpeechPrepared.length).trim();
+      }
+      if (!delta) {
+        streamedSpeechPrepared = preparedText;
+        return;
+      }
+
+      const parts = splitSpeechSegments(delta)
+        .filter(function(part){
+          return normalizeText(part).length >= 18;
+        });
+
+      if (!parts.length) {
+        streamedSpeechPrepared = preparedText;
+        return;
+      }
+
+      speechQueue.push.apply(speechQueue, parts);
+      streamedSpeechPrepared = preparedText;
+      playSpeechQueue();
+    }
+    async function speakChunk(text, token){
+      text = normalizeText(text);
+      if (!tts.checked || !text || token !== activeSpeechToken) return;
       if (cfg.ttsProvider === "browser" || !cfg.ttsUrl) {
         if (!("speechSynthesis" in window)) return;
         await new Promise((resolve) => {
-          let settled = false;
-          const finish = () => {
-            if (settled) return;
-            settled = true;
-            if (currentSpeechFinish === finish) currentSpeechFinish = null;
-            currentSpeechUtterance = null;
-            setAvatarState("idle");
-            resolve();
-          };
           try{
-            if (runId !== speechRunId) { resolve(); return; }
+            if (token !== activeSpeechToken) { resolve(); return; }
             setAvatarState("talk");
             const u = new SpeechSynthesisUtterance(text);
+            browserUtterance = u;
             u.lang = cfg.lang || "es-MX";
-            currentSpeechUtterance = u;
-            currentSpeechFinish = finish;
-            u.onend = finish;
-            u.onerror = finish;
+            u.onend = () => {
+              browserUtterance = null;
+              resolve();
+            };
+            u.onerror = () => {
+              browserUtterance = null;
+              resolve();
+            };
+            speechSynthesis.cancel();
+            if (token !== activeSpeechToken) { resolve(); return; }
             speechSynthesis.speak(u);
           } catch {
-            finish();
+            browserUtterance = null;
+            resolve();
           }
         });
         return;
       }
       try{
-        if (runId !== speechRunId) return;
         setAvatarState("talk");
         const res = await fetch(cfg.ttsUrl, { method: "POST", headers: { "Content-Type":"application/json" }, body: JSON.stringify({ text, provider: cfg.ttsProvider, voiceProvider: cfg.ttsProvider, lang: cfg.lang || "es-MX", locale: cfg.lang || "es-MX", elevenVoiceId: cfg.elevenVoiceId || undefined, elevenVoice: cfg.elevenVoiceId || undefined }) });
+        if (token !== activeSpeechToken) return;
         if (!res.ok) throw new Error("HTTP " + res.status);
-        if (runId !== speechRunId) return;
         const ct = (res.headers.get("content-type") || "").toLowerCase();
         if (ct.includes("application/json")){
           const data = await res.json();
-          if (runId !== speechRunId) return;
-          if (data.audioBase64 || data.audio){ await playBlob(b64ToBlob(data.audioBase64 || data.audio, data.mimeType || "audio/mpeg")); return; }
-          if (data.url){ await playAudioUrl(data.url); return; }
-          setAvatarState("idle"); return;
+          if (token !== activeSpeechToken) return;
+          if (data.audioBase64 || data.audio){ await playBlob(b64ToBlob(data.audioBase64 || data.audio, data.mimeType || "audio/mpeg"), token); return; }
+          if (data.url){ await playAudioUrl(data.url, token); return; }
+          return;
         }
-        if (runId !== speechRunId) return;
-        await playBlob(await res.blob());
-      } catch { setAvatarState("idle"); }
+        await playBlob(await res.blob(), token);
+      } catch {}
+    }
+    async function playSpeechQueue(){
+      if (speechQueueRunning || !tts.checked || !speechQueue.length) return;
+
+      speechQueueRunning = true;
+      const token = ++speechGeneration;
+      activeSpeechToken = token;
+      setAssistantSpeaking(true);
+
+      try {
+        while (speechQueue.length && token === activeSpeechToken) {
+          const part = speechQueue.shift();
+          await speakChunk(part, token);
+        }
+      } finally {
+        if (activeSpeechToken === token) activeSpeechToken = 0;
+        speechQueueRunning = false;
+        browserUtterance = null;
+        setAssistantSpeaking(false);
+        setAvatarState("idle");
+      }
+    }
+    async function speak(text){
+      text = (text || "").trim();
+      if (!tts.checked || !text) return;
+      stopAssistantSpeech("new-speech");
+      streamedSpeechPrepared = "";
+      speechQueue = splitSpeechSegments(toSpeechText(text) || text);
+      if (!speechQueue.length) speechQueue = [normalizeText(text)];
+      await playSpeechQueue();
     }
     let pendingMenu = null;
     function buildWelcomeMessage(){
@@ -500,7 +779,6 @@
     }
     function startCallVisualState(){
       document.body.classList.add("call-active");
-      activeVoiceCallToken += 1;
       callStartedAt = Date.now();
       updateCallTimer();
       callTimer.classList.add("show");
@@ -513,7 +791,6 @@
     }
     function stopCallVisualState(){
       document.body.classList.remove("call-active");
-      activeVoiceCallToken += 1;
       if (callTimerId) clearInterval(callTimerId);
       callTimerId = null;
       callStartedAt = null;
@@ -538,14 +815,11 @@
     }
     async function ensureMicrophonePermission(){
       if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) throw new Error("Micrófono no disponible");
-      if (microphoneStream && microphoneStream.active) return microphoneStream;
-      microphoneStream = await navigator.mediaDevices.getUserMedia({ audio:{ echoCancellation:true, noiseSuppression:true, autoGainControl:true } });
-      return microphoneStream;
-    }
-    function releaseMicrophoneStream(){
-      if (!microphoneStream) return;
-      microphoneStream.getTracks().forEach(t => t.stop());
-      microphoneStream = null;
+      if (sharedMicStream && sharedMicStream.active) return true;
+      sharedMicStream = await navigator.mediaDevices.getUserMedia({
+        audio:{ echoCancellation:true, noiseSuppression:true, autoGainControl:true, channelCount:1 }
+      });
+      return true;
     }
     async function beginVoiceCall(){
       callStatus.textContent = "Solicitando acceso al micrófono...";
@@ -576,39 +850,41 @@
       }
       return false;
     }
-    async function sendMessage(source){
-      const origin = source || "text";
+    async function sendMessage(){
       const raw = (input.value || "").trim(); if (!raw) return;
+      stopAssistantOutput("new-request");
       input.value = ""; addBubble(raw, "me");
       if (handleMenuInput(raw)) return;
-      const isVoiceTurn = origin === "voice";
       const toSend = pendingMenu ? buildRoutedPrompt(pendingMenu, raw) : raw; pendingMenu = null; setTyping(true);
-      const callTokenAtSend = activeVoiceCallToken;
-      const voiceTurnId = isVoiceTurn ? ++latestVoiceTurnId : 0;
-      let controller = null;
-      if (isVoiceTurn) {
-        if (activeVoiceRequestController) activeVoiceRequestController.abort();
-        controller = new AbortController();
-        activeVoiceRequestController = controller;
-      }
+      streamedSpeechPrepared = "";
+      const botBubble = addBubble("", "bot");
+      let answer = "";
       try{
-        const answer = await callApi(toSend, controller ? controller.signal : undefined);
+        answer = await callApi(toSend, {
+          onChunk: function(chunk, accumulated){
+            answer = accumulated || ((answer || "") + (chunk || ""));
+            updateBubble(botBubble, answer, "bot");
+            enqueueStreamedSpeech(answer, false);
+          },
+          onDone: function(finalText){
+            answer = (finalText || answer || "").trim();
+            updateBubble(botBubble, answer || "Listo.", "bot");
+            enqueueStreamedSpeech(answer || "Listo.", true);
+          }
+        });
         setTyping(false);
-        if (controller && activeVoiceRequestController === controller) activeVoiceRequestController = null;
-        addBubble(answer, "bot");
-        const speechText = toSpeechText(answer);
-        const canSpeakVoiceReply = !isVoiceTurn || (document.body.classList.contains("call-active") && callTokenAtSend === activeVoiceCallToken && voiceTurnId === latestVoiceTurnId);
-        if (speechText && canSpeakVoiceReply) speak(speechText);
       }
-      catch (err) {
+      catch (err){
         setTyping(false);
-        if (controller && activeVoiceRequestController === controller) activeVoiceRequestController = null;
-        if (err && err.name === "AbortError") return;
-        addBubble("Ocurrio un error al consultar la informacion. Intenta de nuevo.", "bot");
+        if (err && err.name === "AbortError") {
+          if (!normalizeText(botBubble.textContent)) botBubble.remove();
+          return;
+        }
+        updateBubble(botBubble, "Ocurrio un error al consultar la informacion. Intenta de nuevo.", "bot");
       }
     }
-    startCallBtn.addEventListener("click", () => { if (document.body.classList.contains("call-active")) { stopCallVisualState(); addBubble("La llamada por voz ha finalizado. Si lo deseas, puedes iniciar una nueva llamada o continuar por texto.", "bot"); } else { beginVoiceCall(); } });
-    switchTextBtn.addEventListener("click", () => { textRow.style.display = "flex"; voiceBox.classList.remove("show"); input.focus(); callSubtitle.textContent = "Atencion por texto disponible. Puedes volver a la llamada cuando quieras."; });
+    startCallBtn.addEventListener("click", () => { if (document.body.classList.contains("call-active")) { stopAssistantOutput("call-ended"); stopCallVisualState(); addBubble("La llamada por voz ha finalizado. Si lo deseas, puedes iniciar una nueva llamada o continuar por texto.", "bot"); } else { beginVoiceCall(); } });
+    switchTextBtn.addEventListener("click", () => {stopAssistantOutput("switch-to-text");textRow.style.display = "flex";voiceBox.classList.remove("show");voiceBox.style.display = "none";input.focus();callSubtitle.textContent = "Atencion por texto disponible. Puedes volver a la llamada cuando quieras.";});
     send.addEventListener("click", sendMessage);
     input.addEventListener("keydown", (e) => { if (e.key === "Enter") sendMessage(); });
     btnClose.addEventListener("click", () => { try { window.close(); } catch {} if (!window.closed) history.back(); });
@@ -636,36 +912,156 @@
       let interimBuffer = "";
       let silenceCommitTimer = null;
       let lastDeliveredText = "";
-      let speechStartedAt = 0;
-      let interruptMonitorId = null;
-      let interruptAudioContext = null;
-      let interruptAnalyser = null;
-      let interruptSource = null;
-      let interruptData = null;
-      let interruptFrames = 0;
-      let lastInterruptAt = 0;
+      let micMonitorCtx = null;
+      let micMonitorAnalyser = null;
+      let micMonitorSource = null;
+      let micMonitorFrame = 0;
+      let micVoiceFrames = 0;
+      let lastBargeInAt = 0;
+      let assistantSpeechStartedAt = 0;
+      let pendingBargeIn = false;
+
+      const BARGE_IN_CONFIG = {
+        rmsThreshold: 0.13,
+        requiredVoiceFrames: 12,
+        cooldownMs: 1800,
+        minAssistantTalkMs: 1600,
+        restartRecognitionDelayMs: 260,
+        recognitionResumeDelayMs: 550,
+        silenceCommitMs: 1250,
+        minInterimChars: 5
+      };
+
       rec.lang = cfg.lang || "es-MX";
       rec.interimResults = true;
       rec.continuous = true;
 
-      const originalSpeak = speak;
-      speak = async function(text){
-        isSpeaking = true;
-        speechStartedAt = Date.now();
-        restartWanted = callListening && document.body.classList.contains("call-active");
-        clearTimeout(silenceCommitTimer);
-        try { if (isRecognitionActive) rec.stop(); } catch {}
-        try {
-          setLiveTranscript("Ania está hablando", "Esperando a que termine la respuesta para volver a escucharte...", true);
-          await originalSpeak(text);
-        } finally {
-          isSpeaking = false;
-          speechStartedAt = 0;
-          if (restartWanted && document.body.classList.contains("call-active")) {
-            setTimeout(startContinuousRecognition, 450);
-          }
+      window.addEventListener("ania-speaking-change", function(ev){
+        isSpeaking = !!(ev && ev.detail && ev.detail.active);
+        if (!document.body.classList.contains("call-active")) return;
+
+        if (isSpeaking) {
+          assistantSpeechStartedAt = Date.now();
+          pendingBargeIn = false;
+          restartWanted = callListening;
+          clearTimeout(silenceCommitTimer);
+
+          try { if (isRecognitionActive) rec.stop(); } catch {}
+
+          setLiveTranscript(
+            "Ania está hablando",
+            "Puedes interrumpirla hablando claramente",
+            true
+          );
+        } else if (callListening && document.body.classList.contains("call-active")) {
+          assistantSpeechStartedAt = 0;
+          pendingBargeIn = false;
+          micVoiceFrames = 0;
+
+          setLiveTranscript("Llamada activa", "Micrófono activo. Puedes comenzar a hablar cuando quieras.", true);
+          setTimeout(startContinuousRecognition, BARGE_IN_CONFIG.recognitionResumeDelayMs);
         }
-      };
+      });
+
+      function stopMicInterruptMonitor(){
+        if (micMonitorFrame) {
+          try { cancelAnimationFrame(micMonitorFrame); } catch {}
+          micMonitorFrame = 0;
+        }
+        micVoiceFrames = 0;
+        if (micMonitorSource) {
+          try { micMonitorSource.disconnect(); } catch {}
+          micMonitorSource = null;
+        }
+        if (micMonitorAnalyser) {
+          try { micMonitorAnalyser.disconnect(); } catch {}
+          micMonitorAnalyser = null;
+        }
+        if (micMonitorCtx) {
+          try { micMonitorCtx.close(); } catch {}
+          micMonitorCtx = null;
+        }
+      }
+      async function startMicInterruptMonitor(){
+        if (!(window.AudioContext || window.webkitAudioContext)) return;
+        if (!(sharedMicStream && sharedMicStream.active)) return;
+        if (micMonitorCtx) return;
+
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        micMonitorCtx = new Ctx();
+        micMonitorSource = micMonitorCtx.createMediaStreamSource(sharedMicStream);
+        micMonitorAnalyser = micMonitorCtx.createAnalyser();
+        micMonitorAnalyser.fftSize = 1024;
+        micMonitorAnalyser.smoothingTimeConstant = 0.22;
+
+        micMonitorSource.connect(micMonitorAnalyser);
+
+        const data = new Uint8Array(micMonitorAnalyser.fftSize);
+
+        const loop = () => {
+          if (!micMonitorAnalyser) return;
+
+          micMonitorAnalyser.getByteTimeDomainData(data);
+
+          let sum = 0;
+          let peak = 0;
+
+          for (let i = 0; i < data.length; i++) {
+            const centered = (data[i] - 128) / 128;
+            const abs = Math.abs(centered);
+            sum += centered * centered;
+            if (abs > peak) peak = abs;
+          }
+
+          const rms = Math.sqrt(sum / data.length);
+          const now = Date.now();
+          const inCall = document.body.classList.contains("call-active");
+          const assistantTalking = assistantIsTalking();
+          const assistantTalkTime = assistantSpeechStartedAt ? (now - assistantSpeechStartedAt) : 0;
+
+          const likelyHumanVoice =
+            rms > BARGE_IN_CONFIG.rmsThreshold &&
+            peak > (BARGE_IN_CONFIG.rmsThreshold * 1.8);
+
+          if (
+            inCall &&
+            assistantTalking &&
+            assistantTalkTime >= BARGE_IN_CONFIG.minAssistantTalkMs &&
+            likelyHumanVoice
+          ) {
+            micVoiceFrames += 1;
+          } else {
+            micVoiceFrames = Math.max(0, micVoiceFrames - 1);
+          }
+
+          const canInterrupt =
+            inCall &&
+            assistantTalking &&
+            assistantTalkTime >= BARGE_IN_CONFIG.minAssistantTalkMs &&
+            micVoiceFrames >= BARGE_IN_CONFIG.requiredVoiceFrames &&
+            (now - lastBargeInAt) > BARGE_IN_CONFIG.cooldownMs;
+
+          if (canInterrupt) {
+            lastBargeInAt = now;
+            micVoiceFrames = 0;
+            pendingBargeIn = true;
+
+            stopAssistantOutput("barge-in-vad");
+            isSpeaking = false;
+            callStatus.textContent = "Escuchando";
+            setLiveTranscript("Te escucho", "Detecté una interrupción real. Puedes continuar hablando...", true);
+
+            setTimeout(() => {
+              pendingBargeIn = false;
+              startContinuousRecognition();
+            }, BARGE_IN_CONFIG.restartRecognitionDelayMs);
+          }
+
+          micMonitorFrame = requestAnimationFrame(loop);
+        };
+
+        micMonitorFrame = requestAnimationFrame(loop);
+      }
 
       function normalizeRecognizedText(value){
         return String(value || "").replace(/\s+/g, " ").trim();
@@ -674,92 +1070,6 @@
         finalBuffer = "";
         interimBuffer = "";
         clearTimeout(silenceCommitTimer);
-      }
-      function stopInterruptMonitor(){
-        interruptFrames = 0;
-        if (interruptMonitorId) cancelAnimationFrame(interruptMonitorId);
-        interruptMonitorId = null;
-        if (interruptSource) {
-          try { interruptSource.disconnect(); } catch {}
-          interruptSource = null;
-        }
-        if (interruptAnalyser) {
-          try { interruptAnalyser.disconnect(); } catch {}
-          interruptAnalyser = null;
-        }
-        if (interruptAudioContext) {
-          const ctx = interruptAudioContext;
-          interruptAudioContext = null;
-          ctx.close().catch(() => {});
-        }
-        interruptData = null;
-      }
-      function interruptAssistantSpeech(reason){
-        if (!document.body.classList.contains("call-active")) return;
-        if (reason !== "manual" && !isSpeaking) return;
-        cancelCurrentSpeech();
-        if (activeVoiceRequestController) {
-          activeVoiceRequestController.abort();
-          activeVoiceRequestController = null;
-        }
-        isSpeaking = false;
-        speechStartedAt = 0;
-        lastDeliveredText = "";
-        callListening = true;
-        restartWanted = true;
-        clearRecognitionBuffers();
-        callStatus.textContent = "Escuchando";
-        mic.textContent = "Escucha activa";
-        setLiveTranscript("Interrupción detectada", "Te escucho. Continúa con tu nueva pregunta.", true);
-        setTimeout(startContinuousRecognition, 120);
-      }
-      async function startInterruptMonitor(){
-        if (interruptMonitorId) return;
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (!AudioCtx) return;
-        try {
-          const stream = await ensureMicrophonePermission();
-          if (!interruptAudioContext) interruptAudioContext = new AudioCtx();
-          if (interruptAudioContext.state === "suspended") {
-            try { await interruptAudioContext.resume(); } catch {}
-          }
-          interruptAnalyser = interruptAudioContext.createAnalyser();
-          interruptAnalyser.fftSize = 1024;
-          interruptAnalyser.smoothingTimeConstant = 0.15;
-          interruptSource = interruptAudioContext.createMediaStreamSource(stream);
-          interruptSource.connect(interruptAnalyser);
-          interruptData = new Uint8Array(interruptAnalyser.fftSize);
-        } catch {
-          stopInterruptMonitor();
-          return;
-        }
-        const tick = () => {
-          if (!interruptAnalyser || !interruptData) {
-            interruptMonitorId = null;
-            return;
-          }
-          interruptMonitorId = requestAnimationFrame(tick);
-          if (!document.body.classList.contains("call-active") || !isSpeaking || !speechStartedAt) {
-            interruptFrames = 0;
-            return;
-          }
-          if ((Date.now() - speechStartedAt) < 650 || (Date.now() - lastInterruptAt) < 1200) return;
-          interruptAnalyser.getByteTimeDomainData(interruptData);
-          let sum = 0;
-          for (let i = 0; i < interruptData.length; i++) {
-            const centered = (interruptData[i] - 128) / 128;
-            sum += centered * centered;
-          }
-          const rms = Math.sqrt(sum / interruptData.length);
-          if (rms > 0.06) interruptFrames += 1;
-          else interruptFrames = Math.max(0, interruptFrames - 1);
-          if (interruptFrames >= 4) {
-            interruptFrames = 0;
-            lastInterruptAt = Date.now();
-            interruptAssistantSpeech("voice");
-          }
-        };
-        interruptMonitorId = requestAnimationFrame(tick);
       }
       function updateLiveTranscript(){
         const combined = normalizeRecognizedText([finalBuffer, interimBuffer].filter(Boolean).join(" "));
@@ -789,14 +1099,22 @@
         clearRecognitionBuffers();
         callStatus.textContent = "Procesando tu consulta";
         setLiveTranscript("Consulta detectada", combined, false);
-        await sendMessage("voice");
+        await sendMessage();
       }
       function queueCommit(){
         clearTimeout(silenceCommitTimer);
-        silenceCommitTimer = setTimeout(() => { commitRecognizedText(true); }, 950);
+        silenceCommitTimer = setTimeout(() => {
+          commitRecognizedText(true);
+        }, BARGE_IN_CONFIG.silenceCommitMs);
       }
       function startContinuousRecognition(){
-        if (!document.body.classList.contains("call-active") || isSpeaking || isRecognitionActive) return;
+        if (!document.body.classList.contains("call-active")) return;
+        if (assistantIsTalking()) return;
+        if (speechQueueRunning) return;
+        if (speechQueue.length) return;
+        if (isRecognitionActive) return;
+        if (pendingBargeIn) return;
+
         try {
           restartWanted = true;
           rec.start();
@@ -806,6 +1124,7 @@
         callListening = false;
         restartWanted = false;
         clearRecognitionBuffers();
+        stopMicInterruptMonitor();
         try { if (isRecognitionActive) rec.stop(); } catch {}
       }
 
@@ -815,7 +1134,6 @@
         if (document.body.classList.contains("call-active")) {
           callStatus.textContent = "Escuchando";
           mic.textContent = "Escucha activa";
-          startInterruptMonitor();
           showLivePanel();
           updateLiveTranscript();
         } else {
@@ -825,11 +1143,11 @@
       rec.onend = () => {
         isRecognitionActive = false;
         setAvatarState("idle");
-        if (document.body.classList.contains("call-active") && callListening && !isSpeaking) {
+        if (document.body.classList.contains("call-active") && callListening && !assistantIsTalking()) {
           callStatus.textContent = "Llamada activa";
           mic.textContent = "Reactivar escucha";
           if (finalBuffer || interimBuffer) queueCommit();
-          setTimeout(startContinuousRecognition, 400);
+          setTimeout(startContinuousRecognition, BARGE_IN_CONFIG.recognitionResumeDelayMs);
         } else {
           mic.textContent = "Reactivar escucha";
         }
@@ -845,22 +1163,57 @@
             return;
           }
           setLiveTranscript("Reconectando audio", "Se perdió momentáneamente la escucha. Intentando reactivar el micrófono...", true);
-          if (callListening && !isSpeaking) setTimeout(startContinuousRecognition, 900);
+          if (callListening && !assistantIsTalking()) setTimeout(startContinuousRecognition, 900);
         }
       };
       rec.onresult = (ev) => {
         let interim = "";
         let finals = [];
+
         for (let i = ev.resultIndex; i < ev.results.length; i++) {
           const result = ev.results[i];
-          const transcript = normalizeRecognizedText(result[0] && result[0].transcript ? result[0].transcript : "");
+          const transcript = normalizeRecognizedText(
+            result[0] && result[0].transcript ? result[0].transcript : ""
+          );
           if (!transcript) continue;
+
           if (result.isFinal) finals.push(transcript);
           else interim += (interim ? " " : "") + transcript;
         }
-        if (finals.length) finalBuffer = normalizeRecognizedText([finalBuffer].concat(finals).join(" "));
+
+        const heardSomething = !!(finals.length || interim);
+        const enoughSpeech =
+          normalizeRecognizedText(interim).length >= BARGE_IN_CONFIG.minInterimChars ||
+          finals.length > 0;
+
+        if (
+          heardSomething &&
+          enoughSpeech &&
+          document.body.classList.contains("call-active") &&
+          assistantIsTalking()
+        ) {
+          lastBargeInAt = Date.now();
+          micVoiceFrames = 0;
+          pendingBargeIn = true;
+
+          stopAssistantOutput("barge-in-sr");
+          isSpeaking = false;
+          callStatus.textContent = "Escuchando";
+          setLiveTranscript("Te escucho", "Interrumpiste la respuesta de Ania. Continúa hablando...", true);
+
+          setTimeout(() => {
+            pendingBargeIn = false;
+            startContinuousRecognition();
+          }, BARGE_IN_CONFIG.restartRecognitionDelayMs);
+        }
+
+        if (finals.length) {
+          finalBuffer = normalizeRecognizedText([finalBuffer].concat(finals).join(" "));
+        }
+
         interimBuffer = normalizeRecognizedText(interim);
         updateLiveTranscript();
+
         if (finals.length) queueCommit();
       };
 
@@ -871,22 +1224,38 @@
           callListening = true;
           restartWanted = true;
           mic.textContent = "Escucha activa";
-          startInterruptMonitor();
-          setTimeout(startContinuousRecognition, 700);
+          await startMicInterruptMonitor();
+          const bootStartedAt = Date.now();
+          const bootRecognition = () => {
+            if (!document.body.classList.contains("call-active")) return;
+            if (pendingBargeIn) {
+              setTimeout(bootRecognition, 250);
+              return;
+            }
+            if (assistantIsTalking()) {
+              if ((Date.now() - bootStartedAt) > 6500) {
+                stopAssistantSpeech("boot-timeout");
+                setLiveTranscript("Escucha activa", "Ya puedes hablar. Reactivé la escucha automática después del saludo.", true);
+                setTimeout(startContinuousRecognition, 180);
+                return;
+              }
+              setTimeout(bootRecognition, 250);
+              return;
+            }
+            startContinuousRecognition();
+          };
+          setTimeout(bootRecognition, 300);
         }
       };
 
       const originalStopCallVisualState = stopCallVisualState;
       stopCallVisualState = function(){
         stopContinuousRecognition();
-        stopInterruptMonitor();
-        cancelCurrentSpeech();
-        lastDeliveredText = "";
-        if (activeVoiceRequestController) {
-          activeVoiceRequestController.abort();
-          activeVoiceRequestController = null;
+        stopAssistantOutput("call-stop-visual");
+        if (sharedMicStream) {
+          try { sharedMicStream.getTracks().forEach(t => t.stop()); } catch {}
+          sharedMicStream = null;
         }
-        releaseMicrophoneStream();
         originalStopCallVisualState();
         mic.textContent = "Reactivar escucha";
       };
@@ -896,12 +1265,11 @@
           await beginVoiceCall();
           return;
         }
-        if (isSpeaking) {
-          interruptAssistantSpeech("manual");
-          return;
-        }
         callListening = true;
         restartWanted = true;
+        pendingBargeIn = false;
+        micVoiceFrames = 0;
+        await startMicInterruptMonitor();
         setLiveTranscript("Reactivando escucha", "Volviendo a activar el micrófono para continuar la llamada...", true);
         startContinuousRecognition();
       });
@@ -910,6 +1278,7 @@
     setAvatarState("idle");
     stopCallVisualState();
     textRow.style.display = "none";
+    voiceBox.style.display = "none";
     voiceBox.classList.add("show");
     addBubble(buildWelcomeMessage(), "bot");
     setTimeout(() => input.focus(), 0);
