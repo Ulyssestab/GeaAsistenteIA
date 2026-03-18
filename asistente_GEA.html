@@ -521,7 +521,7 @@
       try { window.dispatchEvent(new CustomEvent("ania-speaking-change", { detail:{ active: next } })); } catch {}
     }
     function assistantIsTalking(){
-      return !!(assistantSpeakingState || speechQueueRunning || activeSpeechToken);
+      return !!(assistantSpeakingState || speechQueueRunning);
     }
     function cleanupCurrentAudio(){
       if (currentAudio){
@@ -664,7 +664,7 @@
 
       const parts = splitSpeechSegments(delta)
         .filter(function(part){
-          return normalizeText(part).length >= 18;
+          return normalizeText(part).length > 0;
         });
 
       if (!parts.length) {
@@ -826,11 +826,12 @@
       callSubtitle.textContent = "Autoriza el uso del micrófono para comenzar la llamada con Ania.";
       try{
         await ensureMicrophonePermission();
+        stopAssistantOutput("init-call");
         startCallVisualState();
         showLivePanel();
         setLiveTranscript("Llamada activa", "Micrófono activo. Puedes comenzar a hablar cuando quieras.", true);
         addBubble("Hola, soy Ania, asistente virtual del Gobierno del Estado de Aguascalientes. Ya podemos hablar por voz. ¿En qué puedo ayudarte hoy?", "bot");
-        speak("Hola, soy Ania, asistente virtual del Gobierno del Estado de Aguascalientes. Ya podemos hablar por voz. ¿En qué puedo ayudarte hoy?");
+        await speak("Hola, soy Ania, asistente virtual del Gobierno del Estado de Aguascalientes. Ya podemos hablar por voz. ¿En qué puedo ayudarte hoy?");
       } catch (err) {
         stopCallVisualState();
         addBubble("No se pudo activar el micrófono. Puedes intentarlo de nuevo o continuar por texto.", "bot");
@@ -907,6 +908,7 @@
       let callListening = false;
       let isSpeaking = false;
       let isRecognitionActive = false;
+      let isRecognitionStarting = false;
       let restartWanted = false;
       let finalBuffer = "";
       let interimBuffer = "";
@@ -920,17 +922,87 @@
       let lastBargeInAt = 0;
       let assistantSpeechStartedAt = 0;
       let pendingBargeIn = false;
+      let recognitionWatchdogTimer = null;
+      let lastRecognitionActivityAt = 0;
+      let lastRecognitionStartAt = 0;
 
       const BARGE_IN_CONFIG = {
-        rmsThreshold: 0.13,
-        requiredVoiceFrames: 12,
-        cooldownMs: 1800,
-        minAssistantTalkMs: 1600,
-        restartRecognitionDelayMs: 260,
-        recognitionResumeDelayMs: 550,
-        silenceCommitMs: 1250,
-        minInterimChars: 5
+        // Más sensible para que la interrupción humana sí entre,
+        // pero sin reaccionar al primer ruido del entorno.
+        rmsThreshold: 0.10,
+        requiredVoiceFrames: 8,
+        cooldownMs: 1300,
+        minAssistantTalkMs: 900,
+        restartRecognitionDelayMs: 180,
+        recognitionResumeDelayMs: 260,
+        silenceCommitMs: 1000,
+        minInterimChars: 3,
+        forceResumeIntervalMs: 850,
+        maxRecognitionStallMs: 7000
       };
+
+      let recognitionResumeTimer = null;
+      function clearRecognitionResumeTimer(){
+        if (recognitionResumeTimer) {
+          clearTimeout(recognitionResumeTimer);
+          recognitionResumeTimer = null;
+        }
+      }
+      function scheduleRecognitionResume(delay){
+        clearRecognitionResumeTimer();
+        recognitionResumeTimer = setTimeout(() => {
+          recognitionResumeTimer = null;
+          startContinuousRecognition();
+        }, Math.max(120, delay || BARGE_IN_CONFIG.recognitionResumeDelayMs));
+      }
+
+      function markRecognitionActivity(){
+        lastRecognitionActivityAt = Date.now();
+      }
+      function clearRecognitionWatchdog(){
+        if (recognitionWatchdogTimer) {
+          clearInterval(recognitionWatchdogTimer);
+          recognitionWatchdogTimer = null;
+        }
+      }
+      function restartContinuousRecognition(reason){
+        if (!document.body.classList.contains("call-active")) return;
+        if (!callListening) return;
+        if (assistantIsTalking()) return;
+        if (pendingBargeIn) return;
+
+        try {
+          if (isRecognitionActive || isRecognitionStarting) rec.stop();
+        } catch (_) {}
+
+        isRecognitionActive = false;
+        isRecognitionStarting = false;
+        scheduleRecognitionResume(reason === "stall" ? 220 : BARGE_IN_CONFIG.restartRecognitionDelayMs);
+      }
+      function ensureRecognitionWatchdog(){
+        clearRecognitionWatchdog();
+        recognitionWatchdogTimer = setInterval(() => {
+          if (!document.body.classList.contains("call-active")) return;
+          if (!callListening) return;
+          if (assistantIsTalking()) return;
+          if (pendingBargeIn) return;
+
+          const now = Date.now();
+          const inactiveFor = now - (lastRecognitionActivityAt || 0);
+          const startedFor = now - (lastRecognitionStartAt || 0);
+
+          if (!isRecognitionActive && !isRecognitionStarting) {
+            startContinuousRecognition();
+            return;
+          }
+
+          if (isRecognitionActive && startedFor > 1200 && inactiveFor > BARGE_IN_CONFIG.maxRecognitionStallMs) {
+            callStatus.textContent = "Reconectando escucha";
+            setLiveTranscript("Reconectando audio", "La escucha se quedó inactiva. Reactivando el micrófono...", true);
+            restartContinuousRecognition("stall");
+          }
+        }, BARGE_IN_CONFIG.forceResumeIntervalMs);
+      }
 
       rec.lang = cfg.lang || "es-MX";
       rec.interimResults = true;
@@ -945,8 +1017,9 @@
           pendingBargeIn = false;
           restartWanted = callListening;
           clearTimeout(silenceCommitTimer);
+          clearRecognitionResumeTimer();
 
-          try { if (isRecognitionActive) rec.stop(); } catch {}
+          try { if (isRecognitionActive || isRecognitionStarting) rec.stop(); } catch {}
 
           setLiveTranscript(
             "Ania está hablando",
@@ -959,7 +1032,7 @@
           micVoiceFrames = 0;
 
           setLiveTranscript("Llamada activa", "Micrófono activo. Puedes comenzar a hablar cuando quieras.", true);
-          setTimeout(startContinuousRecognition, BARGE_IN_CONFIG.recognitionResumeDelayMs);
+          scheduleRecognitionResume(300);
         }
       });
 
@@ -1053,7 +1126,7 @@
 
             setTimeout(() => {
               pendingBargeIn = false;
-              startContinuousRecognition();
+              restartContinuousRecognition("barge-in-vad");
             }, BARGE_IN_CONFIG.restartRecognitionDelayMs);
           }
 
@@ -1113,23 +1186,37 @@
         if (speechQueueRunning) return;
         if (speechQueue.length) return;
         if (isRecognitionActive) return;
+        if (isRecognitionStarting) return;
         if (pendingBargeIn) return;
 
+        clearRecognitionResumeTimer();
+
         try {
+          isRecognitionStarting = true;
           restartWanted = true;
+          lastRecognitionStartAt = Date.now();
+          markRecognitionActivity();
           rec.start();
-        } catch {}
+        } catch (e) {
+          isRecognitionStarting = false;
+          scheduleRecognitionResume(320);
+        }
       }
       function stopContinuousRecognition(){
         callListening = false;
         restartWanted = false;
+        clearRecognitionResumeTimer();
+        clearRecognitionWatchdog();
         clearRecognitionBuffers();
         stopMicInterruptMonitor();
-        try { if (isRecognitionActive) rec.stop(); } catch {}
+        try { if (isRecognitionActive || isRecognitionStarting) rec.stop(); } catch {}
       }
 
       rec.onstart = () => {
+        isRecognitionStarting = false;
         isRecognitionActive = true;
+        lastRecognitionStartAt = Date.now();
+        markRecognitionActivity();
         setAvatarState("listen");
         if (document.body.classList.contains("call-active")) {
           callStatus.textContent = "Escuchando";
@@ -1141,19 +1228,23 @@
         }
       };
       rec.onend = () => {
+        isRecognitionStarting = false;
         isRecognitionActive = false;
+        markRecognitionActivity();
         setAvatarState("idle");
         if (document.body.classList.contains("call-active") && callListening && !assistantIsTalking()) {
           callStatus.textContent = "Llamada activa";
           mic.textContent = "Reactivar escucha";
           if (finalBuffer || interimBuffer) queueCommit();
-          setTimeout(startContinuousRecognition, BARGE_IN_CONFIG.recognitionResumeDelayMs);
+          scheduleRecognitionResume(BARGE_IN_CONFIG.recognitionResumeDelayMs);
         } else {
           mic.textContent = "Reactivar escucha";
         }
       };
       rec.onerror = (ev) => {
+        isRecognitionStarting = false;
         isRecognitionActive = false;
+        markRecognitionActivity();
         setAvatarState("idle");
         if (document.body.classList.contains("call-active")) {
           const err = (ev && ev.error) ? String(ev.error) : "error";
@@ -1163,10 +1254,11 @@
             return;
           }
           setLiveTranscript("Reconectando audio", "Se perdió momentáneamente la escucha. Intentando reactivar el micrófono...", true);
-          if (callListening && !assistantIsTalking()) setTimeout(startContinuousRecognition, 900);
+          if (callListening && !assistantIsTalking()) scheduleRecognitionResume(900);
         }
       };
       rec.onresult = (ev) => {
+        markRecognitionActivity();
         let interim = "";
         let finals = [];
 
@@ -1203,7 +1295,7 @@
 
           setTimeout(() => {
             pendingBargeIn = false;
-            startContinuousRecognition();
+            restartContinuousRecognition("barge-in-sr");
           }, BARGE_IN_CONFIG.restartRecognitionDelayMs);
         }
 
@@ -1223,28 +1315,13 @@
         if (document.body.classList.contains("call-active")) {
           callListening = true;
           restartWanted = true;
+          pendingBargeIn = false;
           mic.textContent = "Escucha activa";
+          markRecognitionActivity();
           await startMicInterruptMonitor();
-          const bootStartedAt = Date.now();
-          const bootRecognition = () => {
-            if (!document.body.classList.contains("call-active")) return;
-            if (pendingBargeIn) {
-              setTimeout(bootRecognition, 250);
-              return;
-            }
-            if (assistantIsTalking()) {
-              if ((Date.now() - bootStartedAt) > 6500) {
-                stopAssistantSpeech("boot-timeout");
-                setLiveTranscript("Escucha activa", "Ya puedes hablar. Reactivé la escucha automática después del saludo.", true);
-                setTimeout(startContinuousRecognition, 180);
-                return;
-              }
-              setTimeout(bootRecognition, 250);
-              return;
-            }
-            startContinuousRecognition();
-          };
-          setTimeout(bootRecognition, 300);
+          ensureRecognitionWatchdog();
+          setLiveTranscript("Escucha activa", "Ya puedes hablar. La escucha continua quedó activada automáticamente.", true);
+          scheduleRecognitionResume(220);
         }
       };
 
@@ -1269,9 +1346,11 @@
         restartWanted = true;
         pendingBargeIn = false;
         micVoiceFrames = 0;
+        markRecognitionActivity();
         await startMicInterruptMonitor();
+        ensureRecognitionWatchdog();
         setLiveTranscript("Reactivando escucha", "Volviendo a activar el micrófono para continuar la llamada...", true);
-        startContinuousRecognition();
+        restartContinuousRecognition("manual");
       });
     })();
     tts.checked = !!cfg.ttsEnabled;
