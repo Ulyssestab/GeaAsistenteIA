@@ -1,0 +1,223 @@
+/**
+ * estilos.css
+ */
+
+:root {
+    --gea-primary: #2F328A;
+    --gea-primary-dark: #2F328A;
+    --gea-bg: #eee;
+    --gea-white: #fff;
+    --gea-text: #24323F;
+    --gea-border: #ddd;
+
+    --user-bubble: #f3f3f3;
+    --bot-bubble: #4b57f0;
+    --bot-bubble-text: #fff;
+
+    --shadow-soft: 0 10px 24px rgba(0, 0, 0, 0.08);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+body {
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--gea-bg);
+    color: var(--gea-text);
+}
+
+/* =========================
+   LAYOUT GENERAL
+   ========================= */
+.app {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 450px;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+}
+
+/* =========================
+   AVATAR
+   ========================= */
+.avatar-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    background: linear-gradient(180deg, #fff 0%, #eee 100%);
+}
+
+#sideAvatar {
+    display: block;
+    max-width: 90%;
+    max-height: 90dvh;
+    object-fit: contain;
+    object-position: center bottom;
+}
+
+/* =========================
+   CHAT
+   ========================= */
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0; /* CLAVE para que no empuje al avatar */
+    height: 100%;
+    overflow: hidden;
+    background: var(--gea-white);
+    border-left: 4px solid var(--gea-primary);
+}
+
+/* HISTORIAL */
+#chatHistory {
+    flex: 1 1 auto;
+    min-height: 0; /* CLAVE para que exista scroll interno */
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    scrollbar-width: thin;
+    scrollbar-color: rgba(47, 50, 138, 0.45) transparent;
+}
+
+/* SCROLL WEBKIT */
+#chatHistory::-webkit-scrollbar {
+    width: 10px;
+}
+
+#chatHistory::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#chatHistory::-webkit-scrollbar-thumb {
+    background: rgba(47, 50, 138, 0.4);
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+
+/* =========================
+   MENSAJES
+   ========================= */
+.message {
+    max-width: 82%;
+    padding: 12px 15px;
+    border-radius: 16px;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    box-shadow: var(--shadow-soft);
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
+.user-msg {
+    align-self: flex-end;
+    background: var(--user-bubble);
+    color: var(--gea-text);
+}
+
+.bot-msg {
+    align-self: flex-start;
+    background: var(--bot-bubble);
+    color: var(--bot-bubble-text);
+    border-left: 4px solid var(--gea-primary);
+}
+
+.bot-msg p,
+.bot-msg div,
+.bot-msg ul,
+.bot-msg ol {
+    margin-bottom: 8px;
+}
+
+.bot-msg ul,
+.bot-msg ol {
+    padding-left: 20px;
+}
+
+/* LINKS BOT */
+.bot-msg a {
+    color: #fff !important;
+    text-decoration: underline;
+    font-weight: 600;
+    word-break: break-word;
+}
+
+/* =========================
+   CONTROLES
+   ========================= */
+.controls {
+    flex: 0 0 auto;
+    padding: 15px;
+    border-top: 1px solid var(--gea-border);
+    background: #fff;
+}
+
+/* INPUT */
+#userInput {
+    width: 100%;
+    padding: 10px 15px;
+    border-radius: 25px;
+    border: 1px solid var(--gea-border);
+    outline: none;
+}
+
+#userInput:focus {
+    border-color: var(--gea-primary);
+}
+
+/* BOTÓN */
+.btn-mic {
+    margin-top: 10px;
+    width: 100%;
+    padding: 10px;
+    border-radius: 25px;
+    border: none;
+    background: var(--gea-primary);
+    color: #fff;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* =========================
+   RESPONSIVE
+   ========================= */
+@media (max-width: 992px) {
+    .app {
+        grid-template-columns: 1fr;
+        grid-template-rows: 30vh minmax(0, 1fr);
+    }
+
+    .avatar-section {
+        height: 30vh;
+        min-height: 0;
+    }
+
+    #sideAvatar {
+        max-height: 28vh;
+    }
+
+    .chat-container {
+        border-left: none;
+        border-top: 3px solid var(--gea-primary);
+    }
+}
