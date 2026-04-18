@@ -6,29 +6,195 @@
   <title>Ania | Gobierno del Estado de Aguascalientes</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
   <link rel="stylesheet" href="css/estilos.css">
-  </head>
+</head>
 <body>
+  <button
+    id="chatLauncher"
+    class="chat-launcher"
+    type="button"
+    aria-label="Abrir chat Ania"
+    title="Abrir chat"
+  >
+    <span class="launcher-copy">
+      <strong>&iquest;Necesitas ayuda?</strong>
+      <small>Estoy aqu&iacute;</small>
+    </span>
+    <img src="avatares/ania/ania_saludando.png" alt="">
+  </button>
+  <button
+    id="chatLauncherClose"
+    class="chat-launcher-close"
+    type="button"
+    aria-label="Ocultar ayuda"
+    title="Ocultar ayuda"
+  >
+    <span aria-hidden="true">&times;</span>
+  </button>
 
-  <div class="app">
-  <div class="avatar-section d-flex align-items-center justify-content-center">
-    <img id="sideAvatar" src="avatares/ania/ania_saludando.png" alt="Ania">
+  <div
+    id="termsDialog"
+    class="terms-dialog"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="termsDialogTitle"
+    hidden
+  >
+    <div class="terms-dialog-box">
+      <h2 id="termsDialogTitle">T&eacute;rminos y Condiciones</h2>
+      <p>
+        La utilizaci&oacute;n de este sitio y de sus aplicaciones implica el
+        consentimiento del usuario para aceptar y cumplir los t&eacute;rminos y
+        condiciones, as&iacute; como las pol&iacute;ticas de privacidad, seguridad y
+        dem&aacute;s documentos que regulan su uso. Si alguno de estos t&eacute;rminos es
+        contrario a sus intereses, deber&aacute; abstenerse de utilizar el sitio.
+      </p>
+      <div class="terms-dialog-actions">
+        <button id="termsCancel" class="terms-button" type="button">CANCELAR</button>
+        <button id="termsAccept" class="terms-button" type="button">ACEPTAR</button>
+      </div>
+    </div>
   </div>
 
-  <div class="chat-container">
-    <div id="chatHistory"></div>
+  <div class="app">
+    <div class="avatar-section d-flex align-items-center justify-content-center">
+      <img id="sideAvatar" src="avatares/ania/ania_saludando.png" alt="Ania">
+    </div>
 
-    <div class="controls">
-      <div class="w-100">
-        <div id="assistantStatus" class="status-indicator">Presiona el micrófono para iniciar</div>
-        <div class="d-flex gap-2">
-          <input type="text" id="userInput" class="form-control" placeholder="Escribe tu duda aquí...">
-          <button id="btnAction" class="btn btn-primary btn-mic">🎤 Iniciar Voz</button>
+    <div class="chat-container">
+      <div class="chat-brand">
+        <img src="assets/img/app-icon.svg" alt="Gobierno del Estado de Aguascalientes">
+        <div>
+          <strong>Ania</strong>
+          <span>Gobierno de Aguascalientes</span>
+        </div>
+        <button id="chatClose" class="chat-close" type="button" aria-label="Cerrar chat">&times;</button>
+      </div>
+
+      <div id="chatHistory"></div>
+
+      <div class="controls">
+        <div class="w-100">
+          <div id="assistantStatus" class="status-indicator">Presiona el micr&oacute;fono para iniciar</div>
+          <div class="d-flex gap-2">
+            <input type="text" id="userInput" class="form-control" placeholder="Escribe tu duda aqu&iacute;...">
+            <button id="btnAction" class="btn btn-primary btn-mic">Iniciar Voz</button>
+          </div>
         </div>
       </div>
     </div>
   </div>
-</div>
 
+  <button
+    id="chatDockClose"
+    class="chat-dock-close"
+    type="button"
+    aria-label="Cerrar chat"
+    title="Cerrar chat"
+  ></button>
+
+  <script>
+    const geaWidget = document.querySelector(".app");
+    const geaLauncher = document.getElementById("chatLauncher");
+    const geaLauncherClose = document.getElementById("chatLauncherClose");
+    const geaClose = document.getElementById("chatClose");
+    const geaDockClose = document.getElementById("chatDockClose");
+    const termsDialog = document.getElementById("termsDialog");
+    const termsAccept = document.getElementById("termsAccept");
+    const termsCancel = document.getElementById("termsCancel");
+    const termsAcceptedKey = "gea_terms_accepted_v1";
+
+    const hasCookieAcceptedTerms = () => {
+      return document.cookie
+        .split(";")
+        .some((item) => item.trim() === `${termsAcceptedKey}=true`);
+    };
+
+    const hasAcceptedTerms = () => {
+      try {
+        return localStorage.getItem(termsAcceptedKey) === "true" || hasCookieAcceptedTerms();
+      } catch (_) {
+        return hasCookieAcceptedTerms();
+      }
+    };
+
+    const saveAcceptedTerms = () => {
+      try {
+        localStorage.setItem(termsAcceptedKey, "true");
+      } catch (_) {
+        document.cookie = `${termsAcceptedKey}=true; max-age=31536000; path=/; SameSite=Lax`;
+      }
+    };
+
+    const openChat = () => {
+      geaWidget.classList.add("open");
+      geaLauncher.classList.add("is-hidden");
+      geaLauncherClose.classList.add("is-hidden");
+    };
+
+    const closeChat = () => {
+      geaWidget.classList.remove("open");
+      if (!document.body.classList.contains("launcher-dismissed")) {
+        geaLauncher.classList.remove("is-hidden");
+        geaLauncherClose.classList.remove("is-hidden");
+      }
+    };
+
+    const showTermsDialog = () => {
+      geaLauncher.classList.add("is-hidden");
+      geaLauncherClose.classList.add("is-hidden");
+      termsDialog.hidden = false;
+      termsAccept.focus();
+    };
+
+    const hideTermsDialog = (returnFocus = true, restoreLauncher = true) => {
+      termsDialog.hidden = true;
+      if (restoreLauncher && !document.body.classList.contains("launcher-dismissed")) {
+        geaLauncher.classList.remove("is-hidden");
+        geaLauncherClose.classList.remove("is-hidden");
+      }
+      if (returnFocus) {
+        geaLauncher.focus();
+      }
+    };
+
+    geaLauncher.addEventListener("click", () => {
+      if (hasAcceptedTerms()) {
+        openChat();
+        return;
+      }
+
+      showTermsDialog();
+    });
+
+    termsAccept.addEventListener("click", () => {
+      saveAcceptedTerms();
+      hideTermsDialog(false, false);
+      openChat();
+    });
+
+    termsCancel.addEventListener("click", () => {
+      hideTermsDialog();
+    });
+
+    termsDialog.addEventListener("click", (event) => {
+      if (event.target === termsDialog) {
+        hideTermsDialog();
+      }
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && !termsDialog.hidden) {
+        hideTermsDialog();
+      }
+    });
+
+    geaLauncherClose.addEventListener("click", () => {
+      document.body.classList.add("launcher-dismissed");
+    });
+
+    geaClose.addEventListener("click", closeChat);
+    geaDockClose.addEventListener("click", closeChat);
+  </script>
   <script src="js/asistente_logic.js"></script>
 </body>
 </html>

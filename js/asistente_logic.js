@@ -96,7 +96,7 @@ class AsistenteAnia {
                 this.shouldStopListeningAfterSpeech = false;
                 this.recognition.start();
                 this.isListening = true;
-                this.btnAction.innerText = "🛑 Detener";
+                this.btnAction.innerText = "Detener";
                 this.btnAction.classList.remove('btn-primary');
                 this.btnAction.classList.add('btn-danger');
                 this.setAvatar('escuchando');
@@ -108,7 +108,7 @@ class AsistenteAnia {
             this.recognition.stop();
             this.isListening = false;
             this.shouldStopListeningAfterSpeech = false;
-            this.btnAction.innerText = "🎤 Iniciar Voz";
+            this.btnAction.innerText = "Iniciar Voz";
             this.btnAction.classList.remove('btn-danger');
             this.btnAction.classList.add('btn-primary');
             this.setAvatar('saludando');
@@ -339,7 +339,7 @@ class AsistenteAnia {
             console.warn("No se pudo detener el reconocimiento:", e);
         }
 
-        this.btnAction.innerText = "🎤 Iniciar Voz";
+        this.btnAction.innerText = "Iniciar Voz";
         this.btnAction.classList.remove('btn-danger');
         this.btnAction.classList.add('btn-primary');
 
