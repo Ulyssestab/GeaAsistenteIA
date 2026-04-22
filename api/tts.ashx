@@ -115,12 +115,12 @@ public class TtsProxy : IHttpHandler
                 return;
             }
 
-            if (provider != "elevenlabs")
+            if (provider != "elevenlabs" && provider != "local")
             {
                 WriteJson(context, 400, new
                 {
                     error = "Proveedor no soportado",
-                    detail = "Este endpoint soporta provider: elevenlabs | browser"
+                    detail = "Este endpoint soporta provider: elevenlabs | browser | local"
                 });
                 return;
             }
@@ -147,11 +147,21 @@ public class TtsProxy : IHttpHandler
                 return;
             }
 
-            string textForTts = NormalizeTextForElevenLabs(text);
+            byte[] audioBytes;
+            if (provider == "local")
+            {
 
-            byte[] audioBytes = SynthesizeWithElevenLabs(textForTts, apiKey, voiceId, modelId, lang);
-            WriteAudio(context, audioBytes, "audio/mpeg");
-        }
+                SynthesizeWithLocalTtsStream(context, text, lang);
+                return; 
+            }
+            else
+            {
+                
+                string textForTts = NormalizeTextForElevenLabs(text);
+                audioBytes = SynthesizeWithElevenLabs(textForTts, apiKey, voiceId, modelId, lang);
+                WriteAudio(context, audioBytes, "audio/mpeg");
+            }
+        } 
         catch (WebException ex)
         {
             string detail = ReadWebException(ex);
@@ -160,14 +170,6 @@ public class TtsProxy : IHttpHandler
                 error = "Error llamando proveedor TTS",
                 detail = detail,
                 hint = "Revisa salida a api.elevenlabs.io, API key, Voice ID y firewall/proxy del servidor."
-            });
-        }
-        catch (Exception ex)
-        {
-            WriteJson(context, 500, new
-            {
-                error = "Error interno",
-                detail = ex.Message
             });
         }
     }
@@ -687,5 +689,63 @@ public class TtsProxy : IHttpHandler
         context.Response.ContentEncoding = Encoding.UTF8;
         context.Response.Write(Js.Serialize(payload));
         context.Response.Flush();
+    }
+
+    private static void SynthesizeWithLocalTtsStream(HttpContext context, string text, string lang)
+    {
+        string baseUrl = "http://localhost:8020/tts_stream";
+        string langParam = string.IsNullOrWhiteSpace(lang) ? "es" : lang;
+        string url = baseUrl + "?text=" + HttpUtility.UrlEncode(text) + "&language=" + langParam + "&speaker_wav=ania_referencia.wav";
+
+        var req = (HttpWebRequest)WebRequest.Create(url);
+        req.Method = "GET";
+        req.Timeout = 120000;
+
+        try
+        {
+            using (var resp = (HttpWebResponse)req.GetResponse())
+            {
+                context.Response.Clear();
+                context.Response.StatusCode = 200;
+                context.Response.ContentType = "audio/wav";
+                context.Response.BufferOutput = false;
+
+                using (var remoteStream = resp.GetResponseStream())
+                {
+                    byte[] buffer = new byte[8192];
+                    int bytesRead;
+                    while (remoteStream != null && (bytesRead = remoteStream.Read(buffer, 0, buffer.Length)) > 0)
+                    {
+                        if (!context.Response.IsClientConnected) break;
+                        context.Response.OutputStream.Write(buffer, 0, bytesRead);
+                        context.Response.OutputStream.Flush();
+                    }
+                }
+            }
+        }
+        catch (System.Net.WebException wex)
+        {
+            context.Response.Clear();
+            context.Response.StatusCode = 500;
+            context.Response.ContentType = "text/plain";
+            if (wex.Response != null)
+            {
+                using (var sr = new System.IO.StreamReader(wex.Response.GetResponseStream()))
+                {
+                    context.Response.Write("Error desde Python: " + sr.ReadToEnd());
+                }
+            }
+            else
+            {
+                context.Response.Write("No hay conexión con Python: " + wex.Message);
+            }
+        }
+        catch (Exception ex)
+        {
+            context.Response.Clear();
+            context.Response.StatusCode = 500;
+            context.Response.ContentType = "text/plain";
+            context.Response.Write("Error interno C#: " + ex.Message);
+        }
     }
 }

@@ -1,6 +1,6 @@
 /**
  * Lógica del Asistente Virtual - Gobierno de Aguascalientes
- * Maneja: WebSpeech API (Continuo), ElevenLabs TTS y Agente Dinámico con streaming.
+ * Maneja: WebSpeech API (Continuo), Voz Local (Streaming/Precarga) y Agente Dinámico.
  */
 class AsistenteAnia {
     constructor() {
@@ -22,6 +22,18 @@ class AsistenteAnia {
 
         this.audioPlayer = new Audio();
         this.recognition = null;
+        
+        // Variables para el sistema de Chunking y Precarga
+        this.audioQueue = [];
+        this.isAudioPlaying = false;
+        this.isFetchingAudio = false; // <-- Controla que la tarjeta grafica no se satura
+        this.ttsBuffer = "";
+        this.isIAGenerationDone = true; 
+        this.isIAGenerationDone = true;
+
+        // Variables para el temporizador de aburrimiento
+        this.tiempoAburrimiento = 5 * 60 * 1000; // 5 minutos en milisegundos
+        this.timerInactividad = null;
 
         this.init();
     }
@@ -49,6 +61,8 @@ class AsistenteAnia {
                 this.audioPlayer.pause();
                 this.audioPlayer.currentTime = 0;
                 this.isSpeaking = false;
+                this.isAudioPlaying = false;
+                this.audioQueue = []; // Vaciamos la cola para que calle al instante
                 this.shouldStopListeningAfterSpeech = false;
             }
 
@@ -86,6 +100,30 @@ class AsistenteAnia {
         });
 
         this.setAvatar('saludando');
+    }
+
+    iniciarTemporizador() {
+        // Limpiamos cualquier temporizador previo por seguridad
+        this.limpiarTemporizador();
+        
+        // Iniciamos la cuenta regresiva de 5 minutos
+        this.timerInactividad = setTimeout(() => {
+            this.mostrarEstadoAburrida();
+        }, this.tiempoAburrimiento);
+    }
+
+    limpiarTemporizador() {
+        if (this.timerInactividad) {
+            clearTimeout(this.timerInactividad);
+            this.timerInactividad = null;
+        }
+    }
+
+    mostrarEstadoAburrida() {
+        // Cambiamos la imagen del avatar a la versión aburrida
+        if (this.imgAvatar) {
+            this.imgAvatar.src = this.avatarBasePath + '/ania_aburrida.png';
+        }
     }
 
     toggleEscucha() {
@@ -138,6 +176,13 @@ class AsistenteAnia {
         const botMessageEl = this.addMessage("", 'bot');
         let respuestaAcumulada = "";
         let buffer = "";
+        
+        // Reiniciamos todo para la nueva consulta
+        this.isIAGenerationDone = false; 
+        this.audioQueue = [];
+        this.ttsBuffer = "";
+        this.isFetchingAudio = false; 
+        this.shouldStopListeningAfterSpeech = false;
 
         try {
             this.currentIAAbortController = new AbortController();
@@ -158,7 +203,10 @@ class AsistenteAnia {
                 const raw = await response.text();
                 respuestaAcumulada = this.extraerTextoDeChunk(raw);
                 this.actualizarMensajeBot(botMessageEl, respuestaAcumulada);
-                this.finalizarRespuestaIA(respuestaAcumulada);
+                
+                this.ttsBuffer = respuestaAcumulada;
+                this.procesarBufferTTS();
+                this.isIAGenerationDone = true;
                 return;
             }
 
@@ -167,12 +215,15 @@ class AsistenteAnia {
 
             while (true) {
                 const { value, done } = await reader.read();
-                if (done) break;
+                if (done) {
+                    this.isIAGenerationDone = true;
+                    this.procesarColaAudios(); // Última revisión
+                    break;
+                }
 
                 const chunk = decoder.decode(value, { stream: true });
                 buffer += chunk;
 
-                // Procesar por líneas
                 const lineas = buffer.split(/\r?\n/);
                 buffer = lineas.pop() || "";
 
@@ -182,27 +233,32 @@ class AsistenteAnia {
 
                     respuestaAcumulada = this.unirChunks(respuestaAcumulada, textoChunk);
                     this.actualizarMensajeBot(botMessageEl, respuestaAcumulada);
+
+                    this.ttsBuffer += textoChunk;
+                    this.procesarBufferTTS();
                 }
             }
 
-            // Procesar remanente
-            if (buffer.trim()) {
-                const textoFinal = this.extraerTextoDeChunk(buffer);
-                if (textoFinal) {
-                    respuestaAcumulada = this.unirChunks(respuestaAcumulada, textoFinal);
-                    this.actualizarMensajeBot(botMessageEl, respuestaAcumulada);
+            // Procesar lo último que quedó en el buffer
+            if (this.ttsBuffer.trim().length > 0) {
+                const textoFinal = this.htmlATextoParaTTS(this.ttsBuffer);
+                if (textoFinal.trim().length > 0) {
+                    this.audioQueue.push({ texto: textoFinal, url: null });
+                    this.procesarColaAudios();
                 }
+                this.ttsBuffer = "";
             }
 
-            respuestaAcumulada = this.normalizarTexto(respuestaAcumulada);
+            this.isIAGenerationDone = true;
+            this.shouldStopListeningAfterSpeech = this.esDespedida(respuestaAcumulada);
 
-            if (!respuestaAcumulada) {
-                respuestaAcumulada = "No recibí una respuesta válida del agente.";
-                this.actualizarMensajeBot(botMessageEl, respuestaAcumulada);
+            // Verificamos si todo terminó súper rápido
+            if (this.audioQueue.length === 0 && !this.isAudioPlaying) {
+                this.finalizarAudioChunk();
             }
 
-            this.finalizarRespuestaIA(respuestaAcumulada);
         } catch (error) {
+            this.isIAGenerationDone = true;
             if (error.name === 'AbortError') {
                 console.log("Petición abortada.");
                 return;
@@ -217,79 +273,157 @@ class AsistenteAnia {
         }
     }
 
-    extraerTextoDeChunk(rawLine) {
-        if (rawLine == null) return "";
+    procesarBufferTTS() {
+        // NUEVO REGEX MÁS AGRESIVO:
+        // Corta en puntos, interrogaciones y saltos de línea clásicos
+        // Y AHORA TAMBIÉN en etiquetas HTML que separan ideas (<br>, <li>, <p>)
+        const regexPuntuacion = /([.?!:;\n]+(?:\s+|$)|<br\s*\/?>|<\/li>|<\/p>|<\/div>)/i;
+        const partes = this.ttsBuffer.split(regexPuntuacion);
 
-        let line = String(rawLine);
+        // Si tenemos texto + puntuación/etiqueta + algo más, significa que hay un fragmento completo
+        while (partes.length >= 3) {
+            const oracion = partes[0] + (partes[1] || ""); // El texto + el signo o etiqueta
+            const textoTTS = this.htmlATextoParaTTS(oracion).trim();
 
-        // Solo para validar si la línea viene vacía o es control
-        const lineTrim = line.trim();
-        if (!lineTrim) return "";
+            // Solo metemos a la cola si realmente hay texto válido
+            if (textoTTS.length > 2) {
+                // Metemos a la cola con url en 'null' para que se precargue
+                this.audioQueue.push({ texto: textoTTS, url: null });
+                this.procesarColaAudios();
+            }
 
-        if (lineTrim.startsWith("data:")) {
-            // Quita solo el prefijo SSE, pero NO hagas trim() al contenido restante
-            line = line.replace(/^data:\s?/, "");
+            // Quitamos lo procesado y dejamos el resto en el buffer
+            this.ttsBuffer = partes.slice(2).join("");
+            partes.splice(0, 2);
         }
+    }
 
-        const control = line.trim().toLowerCase();
-        if (!control || control === "[done]") return "";
+    // --- NUEVO SISTEMA DE FLUJO Y PRECARGA --- //
 
-        if (
-            control.includes("connected to ") ||
-            control === "(empty)" ||
-            control === "empty"
-        ) {
-            return "";
+    procesarColaAudios() {
+        // 1. Intentamos reproducir si no hay nada sonando
+        this.intentarReproducir();
+
+        // 2. Intentamos precargar la siguiente oración en segundo plano
+        this.intentarPrecargar();
+    }
+
+    async intentarPrecargar() {
+        // Si ya está descargando un audio, esperamos para no saturar la RTX 5070
+        if (this.isFetchingAudio) return;
+
+        // Buscamos la primera oración que necesite ser descargada
+        const itemToFetch = this.audioQueue.find(item => item.url === null);
+        if (!itemToFetch) return; // Todo está descargado
+
+        this.isFetchingAudio = true;
+
+        try {
+            const res = await fetch(this.apiTTS, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: itemToFetch.texto, provider: 'local' })
+            });
+
+            if (res.ok) {
+                const blob = await res.blob();
+                // Validamos que el usuario no haya interrumpido vaciando la cola
+                if (this.audioQueue.includes(itemToFetch)) {
+                    itemToFetch.url = URL.createObjectURL(blob);
+                }
+            }
+        } catch (e) {
+            console.error("Error en precarga TTS:", e);
+        } finally {
+            this.isFetchingAudio = false;
+            // Al terminar de descargar, volvemos a evaluar la cola (reproducir o descargar la siguiente)
+            this.procesarColaAudios();
         }
+    }
 
-        const posibleJson = line.trim();
-        if (posibleJson.startsWith("{") && posibleJson.endsWith("}")) {
-            try {
-                const obj = JSON.parse(posibleJson);
-                return (
-                    obj.output ??
-                    obj.respuesta ??
-                    obj.text ??
-                    obj.chunk ??
-                    obj.data ??
-                    ""
-                );
-            } catch {
-                // sigue abajo
+    intentarReproducir() {
+        // Si ya está sonando un audio o la cola está vacía, no hacemos nada
+        if (this.isAudioPlaying || this.audioQueue.length === 0) return;
+
+        const nextItem = this.audioQueue[0];
+
+        // ¿El siguiente audio ya se descargó en segundo plano?
+        if (nextItem.url) {
+            // ¡Listo para sonar! Lo sacamos de la cola de espera
+            this.audioQueue.shift();
+            
+            this.isAudioPlaying = true;
+            this.isSpeaking = true;
+            this.setAvatar('hablando');
+            this.statusTxt.innerText = "Ania respondiendo...";
+
+            this.audioPlayer.src = nextItem.url;
+            this.audioPlayer.play().catch(e => {
+                console.error("Error reproduciendo audio:", e);
+                this.finalizarAudioChunk();
+            });
+
+            this.audioPlayer.onended = () => {
+                // Liberamos memoria
+                URL.revokeObjectURL(nextItem.url); 
+                this.finalizarAudioChunk();
+            };
+        }
+    }
+
+    finalizarAudioChunk() {
+        this.isAudioPlaying = false;
+
+        if (this.audioQueue.length > 0) {
+            // Si hay más audios pendientes, el ciclo continúa
+            this.procesarColaAudios();
+        } else if (this.isIAGenerationDone) {
+            // Ya no hay audios y la IA terminó: Apagamos micrófonos y animaciones
+            this.isSpeaking = false;
+            
+            if (this.shouldStopListeningAfterSpeech) {
+                this.detenerEscuchaAutomatica();
+            } else {
+                this.setAvatar(this.isListening ? 'escuchando' : 'saludando');
+                this.statusTxt.innerText = this.isListening ? "Te escucho..." : "Lista para ayudarte.";
             }
         }
+    }
 
-        // Regresar el texto tal cual, preservando espacios reales del stream
+    // --- FUNCIONES DE LIMPIEZA DE TEXTO (Sin cambios) --- //
+
+    extraerTextoDeChunk(rawLine) {
+        if (rawLine == null) return "";
+        let line = String(rawLine).trim();
+        if (!line) return "";
+        if (line.startsWith("data:")) line = line.replace(/^data:\s?/, "");
+
+        const control = line.toLowerCase();
+        if (!control || control === "[done]") return "";
+        if (control.includes("connected to ") || control === "(empty)" || control === "empty") return "";
+
+        if (line.startsWith("{") && line.endsWith("}")) {
+            try {
+                const obj = JSON.parse(line);
+                return (obj.output ?? obj.respuesta ?? obj.text ?? obj.chunk ?? obj.data ?? "");
+            } catch { }
+        }
         return line;
     }
 
     stripHtml(html) {
         if (!html) return "";
-
         const temp = document.createElement("div");
         temp.innerHTML = html;
-
         let text = temp.textContent || temp.innerText || "";
-
-        // Si no pudo convertir nada y venía solo texto plano, usarlo tal cual
         if (!text.trim()) {
-            text = html
-                .replace(/<br\s*\/?>/gi, "\n")
-                .replace(/<\/p>/gi, "\n")
-                .replace(/<\/div>/gi, "\n")
-                .replace(/<[^>]*>/g, "");
+            text = html.replace(/<br\s*\/?>/gi, "\n").replace(/<\/p>/gi, "\n").replace(/<\/div>/gi, "\n").replace(/<[^>]*>/g, "");
         }
-
         return text;
     }
 
     normalizarTexto(texto) {
-        return (texto || "")
-            .replace(/\u00a0/g, " ")
-            .replace(/[ \t]+\n/g, "\n")
-            .replace(/\n{3,}/g, "\n\n")
-            .replace(/[ \t]{2,}/g, " ")
-            .trim();
+        return (texto || "").replace(/\u00a0/g, " ").replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").replace(/[ \t]{2,}/g, " ").trim();
     }
 
     actualizarMensajeBot(elemento, texto) {
@@ -299,163 +433,45 @@ class AsistenteAnia {
 
     esDespedida(texto) {
         if (!texto) return false;
-
-        const limpio = this.stripHtml(texto)
-            .toLowerCase()
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "")
-            .replace(/\s+/g, " ")
-            .trim();
-
+        const limpio = this.stripHtml(texto).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim();
         const patronesDespedida = [
-            "hasta luego",
-            "hasta pronto",
-            "adios",
-            "que tengas un gran dia",
-            "que tengas un excelente dia",
-            "que tenga un gran dia",
-            "que tenga un excelente dia",
-            "fue un gusto ayudarte",
-            "si necesitas ayuda en el futuro aqui estare",
-            "estare aqui",
-            "gracias por comunicarte",
-            "gracias por contactarnos",
-            "que tengas un buen dia",
-            "que tenga un buen dia",
-            "hasta la proxima",
-            "nos vemos"
+            "hasta luego", "hasta pronto", "adios", "que tengas un gran dia", 
+            "que tengas un excelente dia", "que tenga un gran dia", "que tenga un excelente dia", 
+            "fue un gusto ayudarte", "si necesitas ayuda en el futuro aqui estare", "estare aqui", 
+            "gracias por comunicarte", "gracias por contactarnos", "que tengas un buen dia", 
+            "que tenga un buen dia", "hasta la proxima", "nos vemos"
         ];
-
         return patronesDespedida.some(p => limpio.includes(p));
     }
 
     detenerEscuchaAutomatica() {
         this.shouldStopListeningAfterSpeech = false;
         this.isListening = false;
-
         try {
             if (this.recognition) this.recognition.stop();
         } catch (e) {
             console.warn("No se pudo detener el reconocimiento:", e);
         }
-
         this.btnAction.innerText = "Iniciar Voz";
         this.btnAction.classList.remove('btn-danger');
         this.btnAction.classList.add('btn-primary');
-
         this.setAvatar('saludando');
         this.statusTxt.innerText = "Conversación finalizada. Micrófono apagado.";
     }
 
-    finalizarRespuestaIA(respuestaTexto) {
-        const textoTTS = this.htmlATextoParaTTS(respuestaTexto);
-
-        this.shouldStopListeningAfterSpeech =
-            this.esDespedida(respuestaTexto) || this.esDespedida(textoTTS);
-
-        this.setAvatar('hablando');
-        this.statusTxt.innerText = "Ania respondiendo...";
-        this.hablarConElevenLabs(textoTTS);
-    }
-
-    async hablarConElevenLabs(texto) {
-        if (!texto || !texto.trim()) {
-            this.isSpeaking = false;
-
-            if (this.shouldStopListeningAfterSpeech) {
-                this.detenerEscuchaAutomatica();
-                return;
-            }
-
-            this.setAvatar(this.isListening ? 'escuchando' : 'saludando');
-            return;
-        }
-
-        this.audioPlayer.pause();
-        this.audioPlayer.src = "";
-
-        this.isSpeaking = true;
-        this.setAvatar('hablando');
-        this.statusTxt.innerText = "Ania respondiendo...";
-
-        try {
-            const res = await fetch(this.apiTTS, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    text: texto,
-                    provider: 'elevenlabs',
-                    elevenVoiceId: 'cAvMBIZ0VNTU8XdsUpEq'
-                })
-            });
-
-            if (!res.ok) {
-                throw new Error(`Error en TTS. HTTP ${res.status}`);
-            }
-
-            const blob = await res.blob();
-            this.audioPlayer.src = URL.createObjectURL(blob);
-
-            await this.audioPlayer.play();
-
-            this.audioPlayer.onended = () => {
-                this.isSpeaking = false;
-
-                if (this.shouldStopListeningAfterSpeech) {
-                    this.detenerEscuchaAutomatica();
-                    return;
-                }
-
-                if (this.isListening) {
-                    this.setAvatar('escuchando');
-                    this.statusTxt.innerText = "Te escucho...";
-                } else {
-                    this.setAvatar('saludando');
-                    this.statusTxt.innerText = "Lista para ayudarte.";
-                }
-            };
-        } catch (e) {
-            console.error("Error TTS:", e);
-            this.isSpeaking = false;
-
-            if (this.shouldStopListeningAfterSpeech) {
-                this.detenerEscuchaAutomatica();
-                return;
-            }
-
-            if (this.isListening) {
-                this.setAvatar('escuchando');
-                this.statusTxt.innerText = "Te escucho...";
-            } else {
-                this.setAvatar('saludando');
-                this.statusTxt.innerText = "Lista para ayudarte.";
-            }
-        }
-    }
-
     setAvatar(estado) {
-        this.imgAvatar.classList.toggle(
-            'active-anim',
-            estado === 'escuchando' || estado === 'hablando'
-        );
-
+        this.imgAvatar.classList.toggle('active-anim', estado === 'escuchando' || estado === 'hablando');
         const path = `${this.avatarBasePath}/ania_${estado}.png`;
-
         this.imgAvatar.onerror = () => {
             this.imgAvatar.onerror = null;
             this.imgAvatar.src = `${this.avatarBasePath}/ania_saludando.png`;
         };
-
         this.imgAvatar.src = path;
     }
 
     addMessage(texto, emisor) {
         const div = document.createElement('div');
-        div.className = `message ${emisor}-msg mb-2 p-2 rounded ${
-            emisor === 'user'
-                ? 'bg-light text-end'
-                : 'bg-primary text-white text-start'
-        }`;
+        div.className = `message ${emisor}-msg mb-2 p-2 rounded ${emisor === 'user' ? 'bg-light text-end' : 'bg-primary text-white text-start'}`;
         div.innerText = texto || "";
         this.chatHistory.appendChild(div);
         this.chatHistory.scrollTop = this.chatHistory.scrollHeight;
@@ -463,103 +479,64 @@ class AsistenteAnia {
     }
 
     escaparHtml(texto) {
-        return (texto || "")
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#39;");
+        return (texto || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
     }
 
     normalizarUrl(url) {
         if (!url) return "#";
-
         let limpia = url.replace(/\s+/g, '').trim();
-
         if (/^https?:\/\//i.test(limpia)) return limpia;
         if (/^www\./i.test(limpia)) return "https://" + limpia;
-
         return limpia;
     }
 
     renderizarRespuestaComoHtml(texto) {
         if (!texto) return "";
-
         let html = texto;
-
-        // Si no parece HTML, escapar primero
         const pareceHtml = /<\/?[a-z][\s\S]*>/i.test(html);
-        if (!pareceHtml) {
-            html = this.escaparHtml(html);
-        }
+        if (!pareceHtml) html = this.escaparHtml(html);
 
-        // Convertir Markdown [texto](url) a <a>
-        html = html.replace(
-            /\[([^\]]+)\]\(([^)]+)\)/g,
-            (match, textoLink, url) => {
-                const href = this.normalizarUrl(url.replace(/\s+/g, ''));
-                return `<a href="${href}" target="_blank" rel="noopener noreferrer">${this.escaparHtml(textoLink)}</a>`;
-            }
-        );
+        html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, textoLink, url) => {
+            const href = this.normalizarUrl(url.replace(/\s+/g, ''));
+            return `<a href="${href}" target="_blank" rel="noopener noreferrer">${this.escaparHtml(textoLink)}</a>`;
+        });
 
-        // Convertir URLs sueltas en enlaces clicables
-        // Evita tocar las que ya quedaron dentro de href=""
-        html = html.replace(
-            /(^|[\s>])((https?:\/\/|www\.)[^\s<]+)/gi,
-            (match, prefijo, url) => {
-                const href = this.normalizarUrl(url);
-                const textoVisible = this.escaparHtml(url);
-                return `${prefijo}<a href="${href}" target="_blank" rel="noopener noreferrer">${textoVisible}</a>`;
-            }
-        );
+        html = html.replace(/(^|[\s>])((https?:\/\/|www\.)[^\s<]+)/gi, (match, prefijo, url) => {
+            const href = this.normalizarUrl(url);
+            const textoVisible = this.escaparHtml(url);
+            return `${prefijo}<a href="${href}" target="_blank" rel="noopener noreferrer">${textoVisible}</a>`;
+        });
 
-        // Limpiar etiquetas peligrosas, dejando algunas útiles
-        html = this.sanitizarHtmlPermitido(html);
-
-        return html;
+        return this.sanitizarHtmlPermitido(html);
     }
 
     sanitizarHtmlPermitido(html) {
         const temp = document.createElement("div");
         temp.innerHTML = html;
-
-        const permitidas = new Set([
-            "DIV", "P", "BR", "STRONG", "B", "EM", "I", "UL", "OL", "LI", "A"
-        ]);
+        const permitidas = new Set(["DIV", "P", "BR", "STRONG", "B", "EM", "I", "UL", "OL", "LI", "A"]);
 
         const limpiarNodo = (node) => {
             const hijos = Array.from(node.childNodes);
-
             for (const hijo of hijos) {
                 if (hijo.nodeType === Node.ELEMENT_NODE) {
                     const tag = hijo.tagName.toUpperCase();
-
                     if (!permitidas.has(tag)) {
                         const fragment = document.createDocumentFragment();
-                        while (hijo.firstChild) {
-                            fragment.appendChild(hijo.firstChild);
-                        }
+                        while (hijo.firstChild) fragment.appendChild(hijo.firstChild);
                         hijo.replaceWith(fragment);
                         continue;
                     }
 
-                    // Limpiar atributos peligrosos
                     const attrs = Array.from(hijo.attributes);
                     for (const attr of attrs) {
                         const nombre = attr.name.toLowerCase();
-
-                        if (tag === "A" && (nombre === "href" || nombre === "target" || nombre === "rel")) {
-                            continue;
-                        }
-
+                        if (tag === "A" && (nombre === "href" || nombre === "target" || nombre === "rel")) continue;
                         hijo.removeAttribute(attr.name);
                     }
 
                     if (tag === "A") {
                         let href = hijo.getAttribute("href") || "";
                         href = this.normalizarUrl(href);
-
-                        // Bloquear javascript:
                         if (!/^https?:\/\//i.test(href)) {
                             hijo.removeAttribute("href");
                         } else {
@@ -568,7 +545,6 @@ class AsistenteAnia {
                             hijo.setAttribute("rel", "noopener noreferrer");
                         }
                     }
-
                     limpiarNodo(hijo);
                 }
             }
@@ -580,33 +556,13 @@ class AsistenteAnia {
 
     htmlATextoParaTTS(html) {
         if (!html) return "";
-
-        let tempText = html;
-
-        tempText = tempText
-            .replace(/<br\s*\/?>/gi, "\n")
-            .replace(/<\/p>/gi, "\n")
-            .replace(/<\/div>/gi, "\n")
-            .replace(/<\/li>/gi, "\n")
-            .replace(/<li[^>]*>/gi, "• ")
-            .replace(/<\/ul>/gi, "\n")
-            .replace(/<\/ol>/gi, "\n");
-
+        let tempText = html.replace(/<br\s*\/?>/gi, "\n").replace(/<\/p>/gi, "\n").replace(/<\/div>/gi, "\n").replace(/<\/li>/gi, "\n").replace(/<li[^>]*>/gi, "• ").replace(/<\/ul>/gi, "\n").replace(/<\/ol>/gi, "\n");
         const temp = document.createElement("div");
         temp.innerHTML = tempText;
-
         let texto = temp.textContent || temp.innerText || "";
-
-        texto = texto
-            .replace(/\bhttps?:\/\/[^\s]+/gi, " ")
-            .replace(/\bwww\.[^\s]+/gi, " ")
-            .replace(/enlace del trámite[:]?/gi, "")
-            .replace(/enlace[:]?/gi, "");
-
+        texto = texto.replace(/\bhttps?:\/\/[^\s]+/gi, " ").replace(/\bwww\.[^\s]+/gi, " ").replace(/enlace del trámite[:]?/gi, "").replace(/enlace[:]?/gi, "");
         texto = this.normalizarTexto(texto);
-        texto = this.prepararNumerosParaEleven(texto);
-
-        return texto;
+        return this.prepararNumerosParaEleven(texto);
     }
 
     unirChunks(actual, nuevo) {
@@ -615,27 +571,36 @@ class AsistenteAnia {
 
     prepararNumerosParaEleven(texto) {
         if (!texto) return "";
-
         return texto
-            // C.P. 20180 -> Código Postal 2 0 1 8 0
-            .replace(/\bC\.?\s*P\.?\s*(\d{5})\b/gi, (_, cp) => {
-                return `Código Postal ${cp.split('').join(' ')}`;
-            })
-
-            // # 102 -> número 102
-            .replace(/#\s*(\d+[A-Za-z\-]*)/g, (_, num) => {
-                return `número ${num}`;
-            })
-
-            // teléfonos de 10 dígitos -> separados
-            .replace(/\b(\d{10})\b/g, (_, num) => {
-                return num.split('').join(' ');
-            })
-
-            // folios o claves largas de 6+ dígitos
-            .replace(/\b(\d{6,})\b/g, (_, num) => {
-                return num.split('').join(' ');
-            });
+            // 0. LIMPIEZA FONÉTICA: Arreglamos las distorsiones del motor de voz
+            .replace(/¡Hola!/gi, "Hola,") 
+            .replace(/[¡!]/g, "") 
+            .replace(/C[Ã³óo]digo Postal/gi, "Codigo Postal") 
+            
+            // 1. DINERO: Quitamos $, eliminamos ".00" y borramos las comas de los miles (1,380 -> 1380)
+            .replace(/\$\s*([\d,]+)\.00\s*pesos/gi, (_, num) => `${num.replace(/,/g, '')} pesos`)
+            .replace(/\$\s*([\d,]+)(?:\.\d+)?\s*pesos/gi, (_, num) => `${num.replace(/,/g, '')} pesos`)
+            .replace(/\$\s*([\d,]+)\.00/g, (_, num) => `${num.replace(/,/g, '')} pesos`)
+            .replace(/\$\s*([\d,]+)(?:\.\d+)?/g, (_, num) => `${num.replace(/,/g, '')} pesos`)
+            
+            // 1.5 EXTRA: Si hay números con coma perdidos por ahí (ej. "1,380"), quitamos la coma
+            .replace(/\b(\d+),(\d{3})\b/g, "$1$2")
+            
+            // 2. ABREVIATURAS: Sin puntos para evitar pausas robóticas
+            .replace(/\bAv\./gi, "Avenida")
+            .replace(/\bCol\./gi, "Colonia")
+            .replace(/\bBlvd\./gi, "Bulevar")
+            .replace(/\bLic\./gi, "Licenciado")
+            .replace(/\bIng\./gi, "Ingeniero")
+            .replace(/\bDr\./gi, "Doctor")
+            
+            // 3. C.P. y NÚMEROS: 
+            .replace(/\bC\.?\s*P\.?\s*(\d{5})\b/gi, (_, cp) => `Codigo Postal ${cp.split('').join(' ')}`)
+            .replace(/#\s*(\d+[A-Za-z\-]*)/g, (_, num) => `numero ${num}`)
+            
+            // 4. TELÉFONOS:
+            .replace(/\b(\d{10})\b/g, (_, num) => num.split('').join(' '))
+            .replace(/\b(\d{6,})\b/g, (_, num) => num.split('').join(' '));
     }
 }
 
