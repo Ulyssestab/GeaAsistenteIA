@@ -150,13 +150,11 @@ public class TtsProxy : IHttpHandler
             byte[] audioBytes;
             if (provider == "local")
             {
-
                 SynthesizeWithLocalTtsStream(context, text, lang);
                 return; 
             }
             else
             {
-                
                 string textForTts = NormalizeTextForElevenLabs(text);
                 audioBytes = SynthesizeWithElevenLabs(textForTts, apiKey, voiceId, modelId, lang);
                 WriteAudio(context, audioBytes, "audio/mpeg");
@@ -693,7 +691,8 @@ public class TtsProxy : IHttpHandler
 
     private static void SynthesizeWithLocalTtsStream(HttpContext context, string text, string lang)
     {
-        string baseUrl = "http://localhost:8020/tts_stream";
+        // ¡AQUÍ ESTÁ LA MAGIA! Apuntamos a tu túnel de Cloudflare en lugar de localhost
+        string baseUrl = "https://voz.serviciosdigitalesags.online/tts_stream";
         string langParam = string.IsNullOrWhiteSpace(lang) ? "es" : lang;
         string url = baseUrl + "?text=" + HttpUtility.UrlEncode(text) + "&language=" + langParam + "&speaker_wav=ania_referencia.wav";
 

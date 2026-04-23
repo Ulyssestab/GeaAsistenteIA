@@ -556,11 +556,33 @@ class AsistenteAnia {
 
     htmlATextoParaTTS(html) {
         if (!html) return "";
-        let tempText = html.replace(/<br\s*\/?>/gi, "\n").replace(/<\/p>/gi, "\n").replace(/<\/div>/gi, "\n").replace(/<\/li>/gi, "\n").replace(/<li[^>]*>/gi, "• ").replace(/<\/ul>/gi, "\n").replace(/<\/ol>/gi, "\n");
+        
+        // 1. NUEVO: Eliminar por completo los enlaces en formato Markdown [Texto](url)
+        // Esto evita que el motor lea el texto visible del enlace.
+        let tempText = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, "");
+        
+        // 2. NUEVO: Eliminar por completo los enlaces en formato HTML <a href="...">Texto</a>
+        tempText = tempText.replace(/<a\b[^>]*>.*?<\/a>/gi, "");
+
+        // Tu limpieza original de etiquetas para pausas...
+        tempText = tempText.replace(/<br\s*\/?>/gi, "\n")
+                           .replace(/<\/p>/gi, "\n")
+                           .replace(/<\/div>/gi, "\n")
+                           .replace(/<\/li>/gi, "\n")
+                           .replace(/<li[^>]*>/gi, "• ")
+                           .replace(/<\/ul>/gi, "\n")
+                           .replace(/<\/ol>/gi, "\n");
+                           
         const temp = document.createElement("div");
         temp.innerHTML = tempText;
         let texto = temp.textContent || temp.innerText || "";
-        texto = texto.replace(/\bhttps?:\/\/[^\s]+/gi, " ").replace(/\bwww\.[^\s]+/gi, " ").replace(/enlace del trámite[:]?/gi, "").replace(/enlace[:]?/gi, "");
+        
+        // Limpieza de URLs sueltas que no venían en formato de enlace
+        texto = texto.replace(/\bhttps?:\/\/[^\s]+/gi, " ")
+                     .replace(/\bwww\.[^\s]+/gi, " ")
+                     .replace(/enlace del trámite[:]?/gi, "")
+                     .replace(/enlace[:]?/gi, "");
+                     
         texto = this.normalizarTexto(texto);
         return this.prepararNumerosParaEleven(texto);
     }
