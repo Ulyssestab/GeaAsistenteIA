@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Agente AnIA</title>
+    <link rel="icon" type="image/svg+xml" href="./assets/img/app-icon.svg" />
+    <link rel="stylesheet" href="./agente.css" />
+    <!-- Librerías necesarias para el chat -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.8/dist/purify.min.js"></script>
+  </head>
+  <body>
+    <button
+      id="chatLauncher"
+      class="chat-launcher"
+      type="button"
+      aria-label="Abrir chat Agente AnIA"
+      title="Abrir chat"
+    >
+      <span class="launcher-copy">
+        <strong>&iquest;Necesitas ayuda?</strong>
+        <small>Estoy aqu&iacute;</small>
+      </span>
+      <img src="./assets/avatares/ania/ania_saludando.PNG" alt="" />
+    </button>
+
+    <button
+      id="chatLauncherClose"
+      class="chat-launcher-close"
+      type="button"
+      aria-label="Ocultar ayuda"
+      title="Ocultar ayuda"
+    >
+      <span aria-hidden="true">&times;</span>
+    </button>
+
+    <div
+      id="termsDialog"
+      class="terms-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="termsDialogTitle"
+      hidden
+    >
+      <div class="terms-dialog-box">
+        <h2 id="termsDialogTitle">T&eacute;rminos y Condiciones</h2>
+        <p>
+          La utilizaci&oacute;n de este sitio y de sus aplicaciones implica el
+          consentimiento del usuario para aceptar y cumplir los t&eacute;rminos y
+          condiciones, as&iacute; como las pol&iacute;ticas de privacidad, seguridad y dem&aacute;s
+          documentos que regulan su uso. Si alguno de estos t&eacute;rminos es
+          contrario a sus intereses, deber&aacute; abstenerse de utilizar el sitio.
+        </p>
+        <div class="terms-dialog-actions">
+          <button id="termsCancel" class="terms-button" type="button">CANCELAR</button>
+          <button id="termsAccept" class="terms-button" type="button">ACEPTAR</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="chatWidget" class="app">
+      <div class="avatar-section">
+        <img
+          id="sideAvatar"
+          src="./assets/avatares/ania/ania_saludando.PNG"
+          alt="Avatar del asistente"
+        />
+      </div>
+
+      <div class="chat-container">
+        <div class="chat-brand">
+          <img src="./assets/img/app-icon.svg" alt="Gobierno del Estado de Aguascalientes" />
+          <div>
+            <strong>Agente AnIA</strong>
+            <span>Asistente virtual</span>
+            <span class="status" id="status">
+              Inicializando...
+            </span>
+          </div>
+          <button id="chatClose" class="chat-close" type="button" aria-label="Cerrar chat"></button>
+        </div>
+
+        <div id="chatHistory">
+          <div id="messages"></div>
+        </div>
+
+        <div class="controls">
+          <div class="controls-inner">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <div id="assistantStatus" class="status-indicator" style="margin-bottom: 0;">Escribe tu duda para comenzar.</div>
+              
+              <div class="audio-controls" style="display: flex; gap: 8px;">
+                <button id="btnStopVoice" type="button" title="Detener audio" style="display: none; background: transparent; border: none; font-size: 1.2rem; cursor: pointer;">
+                  ⏹️
+                </button>
+                <button id="btnToggleVoice" type="button" title="Desactivar voz" style="background: transparent; border: none; font-size: 1.2rem; cursor: pointer;">
+                  🔊
+                </button>
+              </div>
+            </div>
+            <div class="composer">
+              <textarea
+                id="messageInput"
+                rows="1"
+                placeholder="Escribe tu duda aquí..."></textarea>
+              <button id="sendBtn" class="btn-send" onclick="sendMessage()">
+                Enviar
+              </button> 
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button
+      id="chatDockClose"
+      class="chat-dock-close"
+      type="button"
+      aria-label="Cerrar chat"
+      title="Cerrar chat"
+    ></button>
+
+    <script src="./js/ania.js"></script>
+  </body>
+</html>
